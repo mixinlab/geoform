@@ -1,115 +1,73 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * Generated with the TypeScript template
- * https://github.com/react-native-community/react-native-template-typescript
- *
- * @format
- */
-
 import React from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import {NativeBaseProvider, Box, Center, Text} from 'native-base';
+import {SafeAreaView} from 'react-native-safe-area-context';
+// import MapboxGL from "@react-native-mapbox-gl/maps";
+// import * as Location from "expo-location";
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+// MapboxGL.StyleURL
+// MapboxGL.setAccessToken(
+//   "sk.eyJ1IjoiYnJlZ3kiLCJhIjoiY2t3MzVoMmhyMXl2azMxbXF5NHNna25hMCJ9.3Q2TzAxgf9FiFOZYNUnT_w"
+// );
 
-const Section: React.FC<{
-  title: string;
-}> = ({children, title}) => {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-};
+export default function App() {
+  // const [location, setLocation] = useState<Location.LocationObject | null>(
+  //   null
+  // );
+  // const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-const App = () => {
-  const isDarkMode = useColorScheme() === 'dark';
+  // useEffect(() => {
+  //   (async () => {
+  //     let { status } = await Location.requestForegroundPermissionsAsync();
+  //     if (status !== "granted") {
+  //       setErrorMsg("Permission to access location was denied");
+  //       return;
+  //     }
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+  //     let location = await Location.getCurrentPositionAsync({});
+  //     setLocation(location);
+
+  //     const stop = await Location.watchPositionAsync(
+  //       {
+  //         accuracy: Location.Accuracy.Highest,
+  //         distanceInterval: 1000,
+  //       },
+  //       (loc: Location.LocationObject) => {
+  //         setLocation(loc);
+  //       }
+  //     );
+  //     // console.log(stop);
+  //     return () => {
+  //       console.log("effect out");
+  //       stop.remove();
+  //     };
+  //   })();
+  // }, []);
+
+  // let text = "Waiting..";
+  // if (errorMsg) {
+  //   text = errorMsg;
+  // } else if (location) {
+  //   text = JSON.stringify(location);
+  // }
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <NativeBaseProvider>
+      <SafeAreaView>
+        <Center mt={8}>
+          <Box textAlign={'center'}>
+            <Text fontSize={28}>Hello world</Text>
+            <Text color={'gray.400'}>This is NativeBase</Text>
+          </Box>
+          <Box>
+            {/* <Text>{text}</Text> */}
+            {/* <MapboxGL.MapView
+              style={{ flex: 1 }}
+              styleURL={MapboxGL.StyleURL.Light}
+            /> */}
+          </Box>
+        </Center>
+        {/* <StatusBar style="auto" /> */}
+      </SafeAreaView>
+    </NativeBaseProvider>
   );
-};
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
-
-export default App;
+}
