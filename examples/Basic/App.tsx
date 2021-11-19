@@ -1,70 +1,150 @@
-import React from 'react';
-import {NativeBaseProvider, Box, Center, Text} from 'native-base';
+import React, {useEffect, useState} from 'react';
+import {
+  NativeBaseProvider,
+  Box,
+  Center,
+  Text,
+  Button,
+  HStack,
+} from 'native-base';
 import {SafeAreaView} from 'react-native-safe-area-context';
-// import MapboxGL from "@react-native-mapbox-gl/maps";
+import MapboxGL from '@react-native-mapbox-gl/maps';
+import Geolocation from 'react-native-geolocation-service';
+import {PermissionsAndroid} from 'react-native';
+
 // import * as Location from "expo-location";
 
 // MapboxGL.StyleURL
-// MapboxGL.setAccessToken(
-//   "sk.eyJ1IjoiYnJlZ3kiLCJhIjoiY2t3MzVoMmhyMXl2azMxbXF5NHNna25hMCJ9.3Q2TzAxgf9FiFOZYNUnT_w"
-// );
+MapboxGL.setAccessToken(
+  'pk.eyJ1IjoiYnJlZ3kiLCJhIjoiY2txd2lucmk1MDBxazJvbzcyeDZyMXBubyJ9.VdiuEyhmzBgJORxU-AUqMw',
+);
+
+// const progressListener = (
+//   offlineRegion: MapboxGL.OfflinePack,
+//   status: MapboxGL.OfflineProgressStatus,
+// ) => console.log(offlineRegion, status);
+// const errorListener = (
+//   offlineRegion: MapboxGL.OfflinePack,
+//   err: MapboxGL.OfflineProgressError,
+// ) => console.log(offlineRegion, err);
+
+MapboxGL.offlineManager
+  .createPack(
+    {
+      name: 'offlinePack',
+      // styleURL: 'mapbox://...',
+      minZoom: 14,
+      maxZoom: 20,
+      // bounds: [
+      //   [neLng, neLat],
+      //   [swLng, swLat],
+      // ],,
+    },
+    (offlineRegion, status) => console.log(offlineRegion, status),
+    (offlineRegion, err) => console.log(offlineRegion, err),
+  )
+  .then(() => {
+    console.log('offline maps saved');
+  })
+  .catch(err => {
+    console.log(err);
+  });
+
+enum PickMode {
+  CurrentPosition,
+  ManualPick,
+}
+
+const Marker = ({mode}: {mode: PickMode}) => {
+  switch (mode) {
+    case PickMode.CurrentPosition:
+      return (
+        <Box rounded="sm" bgColor="gray.900" px={2} py={2} w={10}>
+          <Text bold textAlign="center" color="green.400">
+            CP
+          </Text>
+        </Box>
+      );
+    case PickMode.ManualPick:
+      return (
+        <Box rounded="sm" bgColor="gray.900" px={4} py={4} w={16}>
+          <Text bold textAlign="center" color="red.500" fontSize="lg">
+            MP
+          </Text>
+        </Box>
+      );
+  }
+};
 
 export default function App() {
-  // const [location, setLocation] = useState<Location.LocationObject | null>(
-  //   null
-  // );
-  // const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const mapInstance = React.createRef<MapboxGL.MapView>();
 
-  // useEffect(() => {
-  //   (async () => {
-  //     let { status } = await Location.requestForegroundPermissionsAsync();
-  //     if (status !== "granted") {
-  //       setErrorMsg("Permission to access location was denied");
-  //       return;
-  //     }
+  const [currentPosition, setCurrentPosition] = useState<number[]>([0.0, 0.0]);
+  const [pickMode, setPickMode] = useState<PickMode>(PickMode.CurrentPosition);
 
-  //     let location = await Location.getCurrentPositionAsync({});
-  //     setLocation(location);
-
-  //     const stop = await Location.watchPositionAsync(
-  //       {
-  //         accuracy: Location.Accuracy.Highest,
-  //         distanceInterval: 1000,
-  //       },
-  //       (loc: Location.LocationObject) => {
-  //         setLocation(loc);
-  //       }
-  //     );
-  //     // console.log(stop);
-  //     return () => {
-  //       console.log("effect out");
-  //       stop.remove();
-  //     };
-  //   })();
-  // }, []);
-
-  // let text = "Waiting..";
-  // if (errorMsg) {
-  //   text = errorMsg;
-  // } else if (location) {
-  //   text = JSON.stringify(location);
-  // }
+  useEffect(() => {
+    PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+    )
+      .then(status => {
+        console.log(status);
+        Geolocation.watchPosition(
+          position => {
+            console.log(position);
+            setCurrentPosition([
+              position.coords.longitude,
+              position.coords.latitude,
+            ]);
+            // console.log(mapInstance.current);
+          },
+          error => {
+            console.log(error.code, error.message);
+          },
+          {enableHighAccuracy: true},
+        );
+      })
+      .catch(e => console.log(e));
+  }, []);
 
   return (
     <NativeBaseProvider>
       <SafeAreaView>
-        <Center mt={8}>
-          <Box textAlign={'center'}>
+        <Center my={6}>
+          <Box my={4}>
             <Text fontSize={28}>Hello world</Text>
-            <Text color={'gray.400'}>This is NativeBase</Text>
+            <Text textAlign={'center'} color={'gray.400'}>
+              This is NativeBase
+            </Text>
           </Box>
-          <Box>
-            {/* <Text>{text}</Text> */}
-            {/* <MapboxGL.MapView
-              style={{ flex: 1 }}
-              styleURL={MapboxGL.StyleURL.Light}
-            /> */}
+          <Box width={'100%'} height={'80%'} my={4}>
+            <MapboxGL.MapView
+              ref={mapInstance}
+              style={{flex: 1}}
+              styleURL={MapboxGL.StyleURL.Dark}>
+              <MapboxGL.MarkerView
+                id={'a'}
+                coordinate={currentPosition}
+                draggable={pickMode === PickMode.ManualPick}>
+                <Marker mode={pickMode} />
+              </MapboxGL.MarkerView>
+              {/* <MapboxGL.UserLocation /> */}
+            </MapboxGL.MapView>
           </Box>
+          <HStack space={4}>
+            <Button
+              // variant="outline"
+              onPress={() => {
+                console.info('toggle pick mode', pickMode);
+                if (pickMode === PickMode.CurrentPosition) {
+                  setPickMode(PickMode.ManualPick);
+                } else if (pickMode === PickMode.ManualPick) {
+                  setPickMode(PickMode.CurrentPosition);
+                }
+              }}>
+              Change Mode
+            </Button>
+            <Button>Send Form</Button>
+          </HStack>
         </Center>
         {/* <StatusBar style="auto" /> */}
       </SafeAreaView>
