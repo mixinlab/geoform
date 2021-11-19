@@ -12,33 +12,21 @@ import MapboxGL from '@react-native-mapbox-gl/maps';
 import Geolocation from 'react-native-geolocation-service';
 import {PermissionsAndroid} from 'react-native';
 
-// import * as Location from "expo-location";
-
-// MapboxGL.StyleURL
 MapboxGL.setAccessToken(
   'pk.eyJ1IjoiYnJlZ3kiLCJhIjoiY2txd2lucmk1MDBxazJvbzcyeDZyMXBubyJ9.VdiuEyhmzBgJORxU-AUqMw',
 );
 
-// const progressListener = (
-//   offlineRegion: MapboxGL.OfflinePack,
-//   status: MapboxGL.OfflineProgressStatus,
-// ) => console.log(offlineRegion, status);
-// const errorListener = (
-//   offlineRegion: MapboxGL.OfflinePack,
-//   err: MapboxGL.OfflineProgressError,
-// ) => console.log(offlineRegion, err);
-
 MapboxGL.offlineManager
   .createPack(
     {
-      name: 'offlinePack',
-      // styleURL: 'mapbox://...',
+      name: 'LimaPeruPack',
+      styleURL: 'mapbox://styles/mapbox/dark-v10',
       minZoom: 14,
       maxZoom: 20,
-      // bounds: [
-      //   [neLng, neLat],
-      //   [swLng, swLat],
-      // ],,
+      bounds: [
+        [-77.135009765625, -12.030254580529714],
+        [-76.89537048339844, -12.235339045075248],
+      ],
     },
     (offlineRegion, status) => console.log(offlineRegion, status),
     (offlineRegion, err) => console.log(offlineRegion, err),
@@ -81,6 +69,15 @@ export default function App() {
 
   const [currentPosition, setCurrentPosition] = useState<number[]>([0.0, 0.0]);
   const [pickMode, setPickMode] = useState<PickMode>(PickMode.CurrentPosition);
+
+  const togglePickMode = () => {
+    console.info('toggle pick mode', pickMode);
+    if (pickMode === PickMode.CurrentPosition) {
+      setPickMode(PickMode.ManualPick);
+    } else if (pickMode === PickMode.ManualPick) {
+      setPickMode(PickMode.CurrentPosition);
+    }
+  };
 
   useEffect(() => {
     PermissionsAndroid.request(
@@ -131,18 +128,7 @@ export default function App() {
             </MapboxGL.MapView>
           </Box>
           <HStack space={4}>
-            <Button
-              // variant="outline"
-              onPress={() => {
-                console.info('toggle pick mode', pickMode);
-                if (pickMode === PickMode.CurrentPosition) {
-                  setPickMode(PickMode.ManualPick);
-                } else if (pickMode === PickMode.ManualPick) {
-                  setPickMode(PickMode.CurrentPosition);
-                }
-              }}>
-              Change Mode
-            </Button>
+            <Button onPress={togglePickMode}>Change Mode</Button>
             <Button>Send Form</Button>
           </HStack>
         </Center>
