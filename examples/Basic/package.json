@@ -10,6 +10,7 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
+    "@nozbe/watermelondb": "^0.24.0",
     "@react-native-mapbox-gl/maps": "^8.4.0",
     "native-base": "^3.2.2",
     "react": "17.0.2",
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
+    "@babel/plugin-proposal-decorators": "^7.16.4",
     "@babel/runtime": "^7.12.5",
     "@react-native-community/eslint-config": "^2.0.0",
     "@types/jest": "^26.0.23",
