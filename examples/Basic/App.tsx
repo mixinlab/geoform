@@ -6,11 +6,13 @@ import {
   Text,
   Button,
   HStack,
+  Pressable,
 } from 'native-base';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MapboxGL from '@react-native-mapbox-gl/maps';
 import Geolocation from 'react-native-geolocation-service';
 import {PermissionsAndroid, View} from 'react-native';
+import {allArequipa} from './geocore';
 
 MapboxGL.setAccessToken(
   'pk.eyJ1IjoiYnJlZ3kiLCJhIjoiY2txd2lucmk1MDBxazJvbzcyeDZyMXBubyJ9.VdiuEyhmzBgJORxU-AUqMw',
@@ -44,7 +46,9 @@ enum PickMode {
   StaticPick,
 }
 
-const Marker = ({mode}: {mode: PickMode}) => {
+type MarkerProps = {mode: PickMode; selected?: boolean; onPress?: () => void};
+
+const Marker = ({mode, selected = false, onPress}: MarkerProps) => {
   switch (mode) {
     case PickMode.CurrentPosition:
       return (
@@ -57,18 +61,31 @@ const Marker = ({mode}: {mode: PickMode}) => {
     case PickMode.ManualPick:
       return (
         // <TouchableOpacity >
-        <View style={{padding: 20, backgroundColor: 'red'}}>
-          <Text>XXX</Text>
-        </View>
-        // <Box rounded="sm" bgColor="gray.900" px={4} py={4} w={16}>
-        //   <Text bold textAlign="center" color="red.500" fontSize="lg">
-        //     MP
-        //   </Text>
+        // <Box style={{padding: 20, backgroundColor: 'red'}}>
+        //   <Text>XXX</Text>
         // </Box>
+        <Box rounded="sm" bgColor="gray.900" px={4} py={4} w={16}>
+          <Text bold textAlign="center" color="red.500" fontSize="lg">
+            MP
+          </Text>
+        </Box>
         // </TouchableOpacity>
       );
     case PickMode.StaticPick:
-      return <Box rounded="full" bgColor="darkBlue.300" w={6} h={6} />;
+      return (
+        <Pressable
+          onPress={() => {
+            console.info('onPress');
+            onPress && onPress();
+          }}>
+          <Box
+            rounded="full"
+            bgColor={selected ? 'red.400' : 'green.300'}
+            w={6}
+            h={6}
+          />
+        </Pressable>
+      );
   }
 };
 
@@ -76,22 +93,6 @@ type StaticPick = {
   id: string;
   latitude: number;
   longitude: number;
-};
-
-const generateStaticPicks = (
-  totalPicks: number,
-  origin: number[] = [-12.05, -77.05],
-  radius: number = 0.1,
-): StaticPick[] => {
-  const staticPicks: StaticPick[] = [];
-  for (let i = 0; i < totalPicks; i++) {
-    staticPicks.push({
-      id: `static_pick_${i}`,
-      latitude: origin[1] + i * radius,
-      longitude: origin[0] + i * radius,
-    });
-  }
-  return staticPicks;
 };
 
 export default function App() {
@@ -102,6 +103,9 @@ export default function App() {
   const [userLocation, setUserLocation] = useState<MapboxGL.Location>();
   const [pickMode, setPickMode] = useState<PickMode>(PickMode.CurrentPosition);
   const [staticPicks, setStaticPicks] = useState<StaticPick[]>([]);
+  const [cameraCenter, setCameraCenter] = useState<number[]>([-12.05, -77.05]);
+
+  const [selectedPick, setSelectedPick] = useState<string | null>(null);
 
   const togglePickMode = () => {
     console.info('toggle pick mode', pickMode);
@@ -123,7 +127,8 @@ export default function App() {
             console.log(position);
             const p = [position.coords.longitude, position.coords.latitude];
             setCurrentPosition(p);
-            setStaticPicks(generateStaticPicks(1000, p, 0.001));
+            setCameraCenter(p);
+            // setStaticPicks(generateStaticPicks(100, p, 0.001));
             // console.log(mapInstance.current);
           },
           error => {
@@ -135,6 +140,30 @@ export default function App() {
       .catch(e => console.log(e));
   }, []);
 
+  useEffect(() => {
+    allArequipa(100)
+      .then(data => {
+        console.log(`fetched ${data.length} points`);
+        const points = data.map(d => ({
+          id: d.id,
+          latitude: d.lat,
+          longitude: d.lng,
+        }));
+        // setStaticPicks(generateStaticPicks(1000, p, 0.001));
+
+        const centralPoint = points[Math.floor(points.length / 2)];
+
+        setStaticPicks(points);
+        setCameraCenter([centralPoint.longitude, centralPoint.latitude]);
+
+        // markerInstance.current.
+        //   data
+        //     .slice(100)
+        //     .map(d => ({id: d.id, latitude: d.lat, longitude: d.lng})),
+        // );
+      })
+      .catch(e => console.log(e));
+  }, []);
   // MapboxGL.
 
   return (
@@ -158,9 +187,10 @@ export default function App() {
                 onUpdate={location => setUserLocation(location)}
               />
               <MapboxGL.Camera
-                zoomLevel={16}
+                zoomLevel={15}
                 followUserMode={'normal'}
-                followUserLocation
+                // followUserLocation
+                centerCoordinate={cameraCenter}
               />
               <MapboxGL.MarkerView
                 id={'a'}
@@ -171,11 +201,16 @@ export default function App() {
                 <Marker mode={pickMode} />
               </MapboxGL.MarkerView>
               {staticPicks.map(pick => (
-                <MapboxGL.MarkerView
+                <MapboxGL.PointAnnotation
                   id={pick.id}
+                  key={pick.id}
                   coordinate={[pick.longitude, pick.latitude]}>
-                  <Marker mode={PickMode.StaticPick} />
-                </MapboxGL.MarkerView>
+                  <Marker
+                    mode={PickMode.StaticPick}
+                    selected={selectedPick === pick.id}
+                    onPress={() => setSelectedPick(pick.id)}
+                  />
+                </MapboxGL.PointAnnotation>
               ))}
             </MapboxGL.MapView>
           </Box>
