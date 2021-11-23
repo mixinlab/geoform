@@ -1,15 +1,16 @@
 import MapboxGL from '@react-native-mapbox-gl/maps';
-import {Box, Center, Text, Button, HStack} from 'native-base';
-import React, {useCallback, useEffect, useState} from 'react';
+import {Box, Center, Text, Button, HStack, CheckIcon, useToast} from 'native-base';
+import React, {useEffect, useState} from 'react';
 import {PermissionsAndroid} from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 
 import BubbleCard from '../../components/BubbleCard';
 import MyMap from '../../components/MyMap';
-import SyncIndicator from '../../components/SyncIndicator';
+import SyncIndicator, {SyncState} from '../../components/SyncIndicator';
+import {syncWithRemote} from '../../db/sync';
 import {allArequipa} from '../../lib/geocore';
 import {setupOfflineMaps} from '../../lib/mapbox';
-import {PickMode} from '../../lib/types';
+// import {PickMode} from '../../lib/types';
 import PointController from '../points/PointController';
 
 setupOfflineMaps();
@@ -23,18 +24,38 @@ type StaticPick = {
 const HomeController = () => {
   const [currentPosition, setCurrentPosition] = useState<number[]>([0.0, 0.0]);
   const [userLocation, setUserLocation] = useState<MapboxGL.Location>();
-  const [pickMode, setPickMode] = useState<PickMode>(PickMode.CurrentPosition);
+  // const [pickMode, setPickMode] = useState<PickMode>(PickMode.CurrentPosition);
   const [staticPicks, setStaticPicks] = useState<StaticPick[]>([]);
   const [cameraCenter, setCameraCenter] = useState<number[]>([-12.05, -77.05]);
 
-  const togglePickMode = useCallback(() => {
-    console.info(`toggle pick mode ${pickMode}`);
-    if (pickMode === PickMode.CurrentPosition) {
-      setPickMode(PickMode.ManualPick);
-    } else if (pickMode === PickMode.ManualPick) {
-      setPickMode(PickMode.CurrentPosition);
-    }
-  }, [pickMode]);
+  // const togglePickMode = useCallback(() => {
+  //   console.info(`toggle pick mode ${pickMode}`);
+  //   if (pickMode === PickMode.CurrentPosition) {
+  //     setPickMode(PickMode.ManualPick);
+  //   } else if (pickMode === PickMode.ManualPick) {
+  //     setPickMode(PickMode.CurrentPosition);
+  //   }
+  // }, [pickMode]);
+
+  const toast = useToast();
+
+  const [syncState, setSyncState] = useState<SyncState>('syncing');
+
+  const processSync = () => {
+    syncWithRemote()
+      .then(() => setSyncState('success'))
+      .catch(err => {
+        console.info('sync err', JSON.stringify(err, null, 2));
+        setSyncState('failure');
+      })
+      .finally(() => setTimeout(() => setSyncState('idle'), 2000));
+
+    // PointController.getAll().then(a => console.log('all points', JSON.stringify(a, null, 2)));
+  };
+
+  useEffect(() => {
+    processSync();
+  }, []);
 
   useEffect(() => {
     PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
@@ -91,20 +112,29 @@ const HomeController = () => {
 
     const allPoints = await PointController.getAll();
     console.log(newPoint, allPoints);
+
+    toast.show({
+      status: 'success',
+      title: 'Nuevo punto registrado',
+    });
+
+    processSync();
   };
 
   return (
     <Center my={6}>
-      <SyncIndicator />
-      <Box my={2}>
+      <SyncIndicator syncState={syncState} />
+      <Box my={1}>
         <Text fontSize={28}>GeoForm Tech Demo</Text>
       </Box>
       <BubbleCard location={userLocation} />
       <MyMap cameraCenter={cameraCenter} setUserLocation={setUserLocation} />
 
       <HStack space={4}>
-        <Button onPress={togglePickMode}>Change Mode</Button>
-        <Button onPress={savePointCallback}>Save Point</Button>
+        {/* <Button onPress={togglePickMode}>Change Mode</Button> */}
+        <Button onPress={savePointCallback} leftIcon={<CheckIcon size="5" color="gray.100" />}>
+          Save Point
+        </Button>
       </HStack>
     </Center>
   );

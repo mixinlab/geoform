@@ -1,30 +1,30 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {Box, Text} from 'native-base';
 
-import {mySync} from '../db/sync';
-import PointController from '../modules/points/PointController';
+import {IColors} from 'native-base/lib/typescript/theme/base/colors';
 
-const SyncIndicator = () => {
-  const [syncState, setSyncState] = useState<string>('Syncing data...');
+export type SyncState = 'syncing' | 'success' | 'failure' | 'idle';
 
-  useEffect(() => {
-    mySync()
-      .then(() => setSyncState(''))
-      .catch(err => {
-        console.info('sync err', JSON.stringify(err, null, 2));
-        setSyncState('Sync failed!');
-      });
+const syncStateColor: {[key in SyncState]: IColors} = {
+  syncing: 'orange.300',
+  success: 'green.400',
+  failure: 'red.500',
+  idle: 'gray.300',
+};
 
-    PointController.getAll().then(a => console.log('all points', JSON.stringify(a, null, 2)));
-  }, []);
+type SyncIndicatorProps = {
+  syncState: SyncState;
+};
 
-  if (!syncState) {
-    return null;
-  }
-
+const SyncIndicator = ({syncState}: SyncIndicatorProps) => {
   return (
-    <Box alignItems="center" backgroundColor="#FB8C00" paddingY={1} width="100%">
-      <Text color="#FFFFFF">{syncState}</Text>
+    <Box
+      alignItems="center"
+      backgroundColor={syncStateColor[syncState]}
+      py={1}
+      width="100%"
+      opacity={syncState === 'idle' ? 0 : 1}>
+      <Text color="white">{syncState}</Text>
     </Box>
   );
 };

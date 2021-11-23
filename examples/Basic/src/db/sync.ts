@@ -1,9 +1,8 @@
 import {synchronize} from '@nozbe/watermelondb/sync';
-
 import {SYNC_API_URL} from '../lib/constants';
 import wdb from './db';
 
-export const mySync = async () => {
+export const syncWithRemote = async () => {
   await synchronize({
     database: wdb,
     pullChanges: async ({lastPulledAt}) => {
