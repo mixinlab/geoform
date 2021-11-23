@@ -1,6 +1,6 @@
 import MapboxGL from '@react-native-mapbox-gl/maps';
 import {Box, Center, Text, Button, HStack} from 'native-base';
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {PermissionsAndroid} from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 
@@ -9,6 +9,7 @@ import MyMap from '../../components/MyMap';
 import {allArequipa} from '../../lib/geocore';
 import {setupOfflineMaps} from '../../lib/mapbox';
 import {PickMode} from '../../lib/types';
+import PointController from '../points/PointController';
 
 setupOfflineMaps();
 
@@ -25,14 +26,14 @@ const HomeController = () => {
   const [staticPicks, setStaticPicks] = useState<StaticPick[]>([]);
   const [cameraCenter, setCameraCenter] = useState<number[]>([-12.05, -77.05]);
 
-  const togglePickMode = () => {
-    console.info('toggle pick mode', pickMode);
+  const togglePickMode = useCallback(() => {
+    console.info(`toggle pick mode ${pickMode}`);
     if (pickMode === PickMode.CurrentPosition) {
       setPickMode(PickMode.ManualPick);
     } else if (pickMode === PickMode.ManualPick) {
       setPickMode(PickMode.CurrentPosition);
     }
-  };
+  }, [pickMode]);
 
   useEffect(() => {
     PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
@@ -79,9 +80,16 @@ const HomeController = () => {
       .catch(err => console.log(err));
   }, []);
 
-  const savePointCallback = () => {
-    console.log({userLocation});
-    return null;
+  const savePointCallback = async () => {
+    const newPoint = await PointController.create({
+      accuracy: userLocation?.coords.accuracy || 0,
+      altitude: userLocation?.coords.altitude || 0,
+      latitude: userLocation?.coords.latitude || 0,
+      longitude: userLocation?.coords.longitude || 0,
+    });
+
+    const allPoints = await PointController.getAll();
+    console.log(newPoint, allPoints);
   };
 
   return (
