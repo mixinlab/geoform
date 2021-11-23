@@ -13,6 +13,7 @@ import MapboxGL from '@react-native-mapbox-gl/maps';
 import Geolocation from 'react-native-geolocation-service';
 import {PermissionsAndroid, View} from 'react-native';
 import {allArequipa} from './geocore';
+import {BubbleCard} from './Bubble';
 
 MapboxGL.setAccessToken(
   'pk.eyJ1IjoiYnJlZ3kiLCJhIjoiY2txd2lucmk1MDBxazJvbzcyeDZyMXBubyJ9.VdiuEyhmzBgJORxU-AUqMw',
@@ -134,7 +135,12 @@ export default function App() {
           error => {
             console.log(error.code, error.message);
           },
-          {enableHighAccuracy: true},
+          {
+            enableHighAccuracy: true,
+            accuracy: {
+              android: 'high',
+            },
+          },
         );
       })
       .catch(e => console.log(e));
@@ -164,19 +170,20 @@ export default function App() {
       })
       .catch(e => console.log(e));
   }, []);
-  // MapboxGL.
+
+  const savePointCallback = () => {
+    return null;
+  };
 
   return (
     <NativeBaseProvider>
       <SafeAreaView>
         <Center my={6}>
-          <Box my={4}>
-            <Text fontSize={28}>Hello world</Text>
-            <Text textAlign={'center'} color={'gray.400'}>
-              This is NativeBase
-            </Text>
+          <Box my={2}>
+            <Text fontSize={28}>GeoForm Tech Demo</Text>
           </Box>
-          <Box width={'100%'} height={'80%'} my={4}>
+          <BubbleCard location={userLocation} />
+          <Box width={'100%'} height={'70%'} my={4}>
             <MapboxGL.MapView
               ref={mapInstance}
               // eslint-disable-next-line react-native/no-inline-styles
@@ -189,18 +196,18 @@ export default function App() {
               <MapboxGL.Camera
                 zoomLevel={15}
                 followUserMode={'normal'}
-                // followUserLocation
+                followUserLocation
                 centerCoordinate={cameraCenter}
               />
-              <MapboxGL.MarkerView
+              {/* <MapboxGL.MarkerView
                 id={'a'}
                 ref={markerInstance}
                 coordinate={currentPosition}
                 onDrag={() => console.log(markerInstance.current)}
                 draggable={pickMode === PickMode.ManualPick}>
                 <Marker mode={pickMode} />
-              </MapboxGL.MarkerView>
-              {staticPicks.map(pick => (
+              </MapboxGL.MarkerView> */}
+              {/* {staticPicks.map(pick => (
                 <MapboxGL.PointAnnotation
                   id={pick.id}
                   key={pick.id}
@@ -211,12 +218,12 @@ export default function App() {
                     onPress={() => setSelectedPick(pick.id)}
                   />
                 </MapboxGL.PointAnnotation>
-              ))}
+              ))} */}
             </MapboxGL.MapView>
           </Box>
           <HStack space={4}>
             <Button onPress={togglePickMode}>Change Mode</Button>
-            <Button>Send Form</Button>
+            <Button onPress={savePointCallback}>Save Point</Button>
           </HStack>
         </Center>
         {/* <StatusBar style="auto" /> */}
