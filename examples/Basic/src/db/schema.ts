@@ -3,7 +3,6 @@ import {appSchema, tableSchema} from '@nozbe/watermelondb';
 const schema = appSchema({
   version: 1,
   tables: [
-    // We'll add tableSchemas here later
     tableSchema({
       name: 'points',
       columns: [

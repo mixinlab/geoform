@@ -1,15 +1,13 @@
 import {synchronize} from '@nozbe/watermelondb/sync';
 
+import {SYNC_API_URL} from '../lib/constants';
 import wdb from './db';
 
 export const mySync = async () => {
   await synchronize({
     database: wdb,
-    pullChanges: async ({lastPulledAt, schemaVersion, migration}) => {
-      const urlParams = `last_pulled_at=${lastPulledAt}&schema_version=${schemaVersion}&migration=${encodeURIComponent(
-        JSON.stringify(migration),
-      )}`;
-      const response = await fetch(`https://my.backend/sync?${urlParams}`);
+    pullChanges: async ({lastPulledAt}) => {
+      const response = await fetch(`${SYNC_API_URL}?last_pulled_at=${lastPulledAt}`);
       if (!response.ok) {
         throw new Error(await response.text());
       }
@@ -18,9 +16,10 @@ export const mySync = async () => {
       return {changes, timestamp};
     },
     pushChanges: async ({changes, lastPulledAt}) => {
-      const response = await fetch(`https://my.backend/sync?last_pulled_at=${lastPulledAt}`, {
+      const response = await fetch(`${SYNC_API_URL}?last_pulled_at=${lastPulledAt}`, {
         method: 'POST',
-        body: JSON.stringify(changes),
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({changes}),
       });
       if (!response.ok) {
         throw new Error(await response.text());

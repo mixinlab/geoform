@@ -6,6 +6,7 @@ import Geolocation from 'react-native-geolocation-service';
 
 import BubbleCard from '../../components/BubbleCard';
 import MyMap from '../../components/MyMap';
+import SyncIndicator from '../../components/SyncIndicator';
 import {allArequipa} from '../../lib/geocore';
 import {setupOfflineMaps} from '../../lib/mapbox';
 import {PickMode} from '../../lib/types';
@@ -94,6 +95,7 @@ const HomeController = () => {
 
   return (
     <Center my={6}>
+      <SyncIndicator />
       <Box my={2}>
         <Text fontSize={28}>GeoForm Tech Demo</Text>
       </Box>
