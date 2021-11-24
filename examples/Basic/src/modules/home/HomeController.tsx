@@ -103,7 +103,9 @@ const HomeController = () => {
   }, []);
 
   const savePointCallback = async () => {
-    const newPoint = await PointController.create({
+    // await PointController.resetDB();
+
+    await PointController.create({
       accuracy: userLocation?.coords.accuracy || 0,
       altitude: userLocation?.coords.altitude || 0,
       latitude: userLocation?.coords.latitude || 0,
@@ -111,7 +113,7 @@ const HomeController = () => {
     });
 
     const allPoints = await PointController.getAll();
-    console.log(newPoint, allPoints);
+    console.log(JSON.stringify(allPoints, null, 2));
 
     toast.show({
       status: 'success',

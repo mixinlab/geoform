@@ -38,6 +38,13 @@ class PointController {
     });
     return newPoint;
   }
+
+  static async resetDB() {
+    const result = await wdb.write(async () => {
+      return wdb.unsafeResetDatabase();
+    });
+    return result;
+  }
 }
 
 export default PointController;
