@@ -26,7 +26,7 @@ class GeoFormMapWidget extends HookWidget {
   GeoFormMapWidget({Key? key}) : super(key: key);
 
   void _animatedMapMove(
-    AnimationController controller,
+    AnimationController animationController,
     LatLng destLocation,
     double destZoom,
   ) {
@@ -34,35 +34,44 @@ class GeoFormMapWidget extends HookWidget {
       begin: mapController.center.latitude,
       end: destLocation.latitude,
     );
+
     final _lngTween = Tween<double>(
       begin: mapController.center.longitude,
       end: destLocation.longitude,
     );
+
     final _zoomTween = Tween<double>(
       begin: mapController.zoom,
       end: destZoom,
     );
 
     Animation<double> animation = CurvedAnimation(
-      parent: controller,
+      parent: animationController,
       curve: Curves.fastOutSlowIn,
     );
 
-    controller.addListener(() {
+    animationController.reset();
+
+    animationController.addListener(() {
       mapController.move(
-          LatLng(_latTween.evaluate(animation), _lngTween.evaluate(animation)),
+          LatLng(
+            _latTween.evaluate(animation),
+            _lngTween.evaluate(animation),
+          ),
           _zoomTween.evaluate(animation));
     });
 
-    animation.addStatusListener((status) {
+    animationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        controller.dispose();
+        // animationController.removeListener(() {});
+        // animationController.dispose();
+        // animationController.reset();
       } else if (status == AnimationStatus.dismissed) {
-        controller.dispose();
+        // animationController.reset();
       }
     });
 
-    controller.forward();
+    animationController.forward();
   }
 
   @override
@@ -72,8 +81,8 @@ class GeoFormMapWidget extends HookWidget {
       "longitude": -77.019346,
     }));
 
-    final animationController = useAnimationController(
-      duration: const Duration(milliseconds: 500),
+    final mapAnimationController = useAnimationController(
+      duration: const Duration(milliseconds: 820),
     );
 
     useEffect(() {
@@ -81,7 +90,7 @@ class GeoFormMapWidget extends HookWidget {
           .then((value) {
             userPosition.value = value;
             _animatedMapMove(
-              animationController,
+              mapAnimationController,
               latLngFromPosition(userPosition.value),
               16,
             );
@@ -163,7 +172,7 @@ class GeoFormMapWidget extends HookWidget {
                       ),
                       child: IconButton(
                         onPressed: () => _animatedMapMove(
-                          animationController,
+                          mapAnimationController,
                           latLngFromPosition(userPosition.value),
                           16,
                         ),
