@@ -152,6 +152,10 @@ class GeoFormMapWidget extends HookWidget {
           });
     }, []);
 
+    useEffect(() {
+      logger.d(fixedPoints);
+    }, [fixedPoints]);
+
     return Column(
       children: [
         // const Text("Hello World"),

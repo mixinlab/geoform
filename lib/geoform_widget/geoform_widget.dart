@@ -13,6 +13,7 @@ class GeoFormWidget extends HookWidget {
 
   GeoFormWidget({
     Key? key,
+    List<GeoFormFixedPoint>? fixedPoints,
     required this.name,
     required this.userInformation,
     required this.form,
