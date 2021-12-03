@@ -25,7 +25,7 @@ class GeoFormWidget extends HookWidget {
       body: GeoFormMapWidget(
         name: name,
         form: form,
-        fixedPoints: fixedPoints,
+        // fixedPoints: fixedPoints,
         user: userInformation,
       ),
     );

@@ -9,18 +9,18 @@ import 'package:dio/dio.dart';
 import 'package:latlong2/latlong.dart';
 
 void main() {
-  runApp(AppImplementation());
+  runApp(const AppImplementation());
 }
 
-String geoPoints({
-  int? limit = 10,
-  String? baseURL = "https://geocore.innovalab.minsky.cc/api/v1",
-  String? group = "ee73a646-0066-4f4a-8ee9-358e77ebba7f",
-}) =>
-    '$baseURL/group/$group?limit=$limit';
+// String geoPoints({
+//   int? limit = 10,
+//   String? baseURL = "https://geocore.innovalab.minsky.cc/api/v1",
+//   String? group = "ee73a646-0066-4f4a-8ee9-358e77ebba7f",
+// }) =>
+//     '$baseURL/group/$group?limit=$limit';
 
 class AppImplementation extends HookWidget {
-  AppImplementation({
+  const AppImplementation({
     Key? key,
   }) : super(key: key);
 
@@ -30,15 +30,29 @@ class AppImplementation extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final points = useState<List<GeoPoint>?>([]);
+    // final points = useState<List<GeoFormFixedPoint>?>([]);
 
-    useEffect(() {
-      Dio().get<List<dynamic>>(geoPoints(limit: 10)).then((value) {
-        points.value = value.data?.map((e) => GeoPoint.fromJson(e)).toList();
-      });
-    }, []);
+    // useEffect(() {
+    //   Dio().get<List<dynamic>>(geoPoints(limit: 10)).then((result) {
+    //     points.value = result.data
+    //         ?.map((e) => GeoPoint.fromJson(e))
+    //         .map(
+    //           (e) => GeoFormFixedPoint(
+    //             latLng: LatLng(
+    //               e.lat ?? 0.0,
+    //               e.lng ?? 0.0,
+    //             ),
+    //             metadata: {
+    //               "id": e.id,
+    //               "unicode": e.unicode,
+    //             },
+    //           ),
+    //         )
+    //         .toList();
+    //   });
+    // }, []);
 
-    logger.d(points.value);
+    // logger.d(points.value);
 
     return MaterialApp(
       title: 'Flutter Map Test',
@@ -53,20 +67,7 @@ class AppImplementation extends HookWidget {
       home: GeoFormWidget(
         name: "Rociados Pendientes",
         form: const Text("form"),
-        fixedPoints: points.value
-            ?.map(
-              (e) => GeoFormFixedPoint(
-                latLng: LatLng(
-                  e.lat ?? 0.0,
-                  e.lng ?? 0.0,
-                ),
-                metadata: {
-                  "id": e.id,
-                  "unicode": e.unicode,
-                },
-              ),
-            )
-            .toList(),
+        // fixedPoints: points.value,
         userInformation: UserInformation(
           id: "1",
           name: "Bregy Malpartida",
