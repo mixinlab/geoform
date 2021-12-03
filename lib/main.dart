@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:geoformflutter/geocore.dart';
 import 'package:geoformflutter/geoform/entities.dart';
+import 'package:geoformflutter/geoform/logger.dart';
 import 'package:geoformflutter/geoform/user.dart';
 import 'package:geoformflutter/geoform_widget/geoform_widget.dart';
 import 'package:dio/dio.dart';
@@ -19,7 +20,9 @@ String geoPoints({
     '$baseURL/group/$group?limit=$limit';
 
 class AppImplementation extends HookWidget {
-  AppImplementation({Key? key});
+  AppImplementation({
+    Key? key,
+  }) : super(key: key);
 
   // {
   //   // super(key: key);
@@ -34,6 +37,8 @@ class AppImplementation extends HookWidget {
         points.value = value.data?.map((e) => GeoPoint.fromJson(e)).toList();
       });
     }, []);
+
+    logger.d(points.value);
 
     return MaterialApp(
       title: 'Flutter Map Test',
@@ -55,6 +60,10 @@ class AppImplementation extends HookWidget {
                   e.lat ?? 0.0,
                   e.lng ?? 0.0,
                 ),
+                metadata: {
+                  "id": e.id,
+                  "unicode": e.unicode,
+                },
               ),
             )
             .toList(),

@@ -22,12 +22,12 @@ class GeoPoint {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['unicode'] = this.unicode;
-    data['lat'] = this.lat;
-    data['lng'] = this.lng;
-    data['geom'] = this.geom;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['unicode'] = unicode;
+    data['lat'] = lat;
+    data['lng'] = lng;
+    data['geom'] = geom;
     return data;
   }
 }

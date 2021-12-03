@@ -82,6 +82,7 @@ class GeoFormMapWidget extends HookWidget {
         // animationController.dispose();
         // animationController.reset();
       } else if (status == AnimationStatus.dismissed) {
+        // animationController.removeListener(mapMove);
         // animationController.reset();
       }
     });
@@ -106,28 +107,28 @@ class GeoFormMapWidget extends HookWidget {
 
     final manualMode = useState(false);
 
-    useEffect(() {
-      // logger.d(manualMode.value);
-      if (manualMode.value) {
-        subscription = mapController.mapEventStream.listen((event) {
-          // logger.d(event.center);
-          selectedPosition.value = Position(
-            longitude: event.center.longitude,
-            latitude: event.center.latitude,
-            timestamp: DateTime.now(),
-            accuracy: 0.0,
-            altitude: 0.0,
-            heading: 0.0,
-            speed: 0.0,
-            speedAccuracy: 0.0,
-          );
-        });
-      }
+    // useEffect(() {
+    // logger.d(manualMode.value);
+    // if (manualMode.value) {
+    //   subscription = mapController.mapEventStream.listen((event) {
+    //     // logger.d(event.center);
+    //     selectedPosition.value = Position(
+    //       longitude: event.center.longitude,
+    //       latitude: event.center.latitude,
+    //       timestamp: DateTime.now(),
+    //       accuracy: 0.0,
+    //       altitude: 0.0,
+    //       heading: 0.0,
+    //       speed: 0.0,
+    //       speedAccuracy: 0.0,
+    //     );
+    //   });
+    // }
 
-      if (manualMode.value == false) {
-        subscription?.cancel();
-      }
-    }, [manualMode.value]);
+    // if (manualMode.value == false) {
+    //   subscription?.cancel();
+    // }
+    // }, [manualMode.value]);
 
     useEffect(() {
       determinePosition()
@@ -167,6 +168,20 @@ class GeoFormMapWidget extends HookWidget {
               FlutterMap(
                 mapController: mapController,
                 options: MapOptions(
+                  onPositionChanged: (position, hasGesture) {
+                    if (manualMode.value) {
+                      selectedPosition.value = Position(
+                        longitude: position.center?.longitude ?? 0.0,
+                        latitude: position.center?.latitude ?? 0.0,
+                        timestamp: DateTime.now(),
+                        accuracy: 0.0,
+                        altitude: 0.0,
+                        heading: 0.0,
+                        speed: 0.0,
+                        speedAccuracy: 0.0,
+                      );
+                    }
+                  },
                   // onPositionChanged: (position, x) =>
                   //     logger.d(position.center, x),
                   center: latLngFromPosition(userPosition.value),
