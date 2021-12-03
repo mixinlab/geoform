@@ -9,12 +9,14 @@ import 'package:geoformflutter/geocore.dart';
 import 'package:geoformflutter/geoform/entities.dart';
 import 'package:geoformflutter/geoform/geolocation.dart';
 import 'package:geoformflutter/geoform/logger.dart';
+import 'package:geoformflutter/geoform/map/basic_information.dart';
 import 'package:geoformflutter/geoform/user.dart';
 import 'package:geoformflutter/geoform/utils.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+// import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 
 class CachedTileProvider extends TileProvider {
   const CachedTileProvider();
@@ -149,6 +151,7 @@ class GeoFormMapWidget extends HookWidget {
     useEffect(() {
       logger.d(manualMode.value);
       if (manualMode.value) {
+        selectedFixedPoint.value = null;
         subscription = mapController.value.mapEventStream.listen((event) {
           // logger.d(event.center);
           selectedPosition.value = Position(
@@ -194,17 +197,19 @@ class GeoFormMapWidget extends HookWidget {
     }, []);
 
     useEffect(() {
-      logger.d(selectedFixedPoint.value?.latLng);
-      selectedPosition.value = Position(
-        longitude: selectedFixedPoint.value?.latLng.longitude ?? 0.0,
-        latitude: selectedFixedPoint.value?.latLng.latitude ?? 0.0,
-        timestamp: DateTime.now(),
-        accuracy: 0.0,
-        altitude: 0.0,
-        heading: 0.0,
-        speed: 0.0,
-        speedAccuracy: 0.0,
-      );
+      // logger.d(selectedFixedPoint.value?.latLng);
+      if (selectedFixedPoint.value != null) {
+        selectedPosition.value = Position(
+          longitude: selectedFixedPoint.value?.latLng.longitude ?? 0.0,
+          latitude: selectedFixedPoint.value?.latLng.latitude ?? 0.0,
+          timestamp: DateTime.now(),
+          accuracy: 0.0,
+          altitude: 0.0,
+          heading: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+        );
+      }
     }, [selectedFixedPoint.value]);
 
     return Column(
@@ -218,6 +223,23 @@ class GeoFormMapWidget extends HookWidget {
               FlutterMap(
                 mapController: mapController.value,
                 options: MapOptions(
+                  // onTap: (tapPosition, point) {
+                  //   logger.i(point);
+
+                  //   // final distances =
+                  //   points.value?.forEach((e) {
+                  //     final diff = Geolocator.distanceBetween(
+                  //       point.latitude,
+                  //       point.longitude,
+                  //       e.latLng.latitude,
+                  //       e.latLng.longitude,
+                  //     );
+                  //     logger.i(diff);
+                  //     if (diff < 500) {
+                  //       selectedFixedPoint.value = e;
+                  //     }
+                  //   });
+                  // },
                   center: latLngFromPosition(userPosition.value),
                   zoom: 12.0,
                   maxZoom: 18,
@@ -253,32 +275,85 @@ class GeoFormMapWidget extends HookWidget {
                   ),
                   // GeoFormStaticLayer(fixedPoint: fixedPoint)
                   MarkerLayerWidget(
-                      options: MarkerLayerOptions(
-                    markers: points.value
-                            ?.map(
-                              (e) => Marker(
-                                point: e.latLng,
-                                builder: (context) => GestureDetector(
-                                  onTap: () => selectedFixedPoint.value = e,
-                                  child: Icon(
-                                    Icons.circle_rounded,
-                                    color: selectedFixedPoint
-                                                .value?.metadata?["id"] ==
-                                            e.metadata?["id"]
-                                        ? Colors.indigo
-                                        : Colors.amber,
-                                    size: selectedFixedPoint
-                                                .value?.metadata?["id"] ==
-                                            e.metadata?["id"]
-                                        ? 20.0
-                                        : 16.0,
+                    options: MarkerLayerOptions(
+                      markers: points.value
+                              ?.map(
+                                (e) => Marker(
+                                  point: e.latLng,
+                                  builder: (context) => GestureDetector(
+                                    onTap: () => selectedFixedPoint.value = e,
+                                    child: Icon(
+                                      Icons.circle_rounded,
+                                      // color: Colors.amber,
+                                      // size: 16.0,
+                                      color: selectedFixedPoint
+                                                  .value?.metadata?["id"] ==
+                                              e.metadata?["id"]
+                                          ? Colors.indigo
+                                          : Colors.amber,
+                                      size: selectedFixedPoint
+                                                  .value?.metadata?["id"] ==
+                                              e.metadata?["id"]
+                                          ? 20.0
+                                          : 16.0,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            )
-                            .toList() ??
-                        [],
-                  )),
+                              )
+                              .toList() ??
+                          [],
+                    ),
+                  ),
+                  // MarkerClusterLayerWidget(
+                  //   options: MarkerClusterLayerOptions(
+                  //     // disableClusteringAtZoom: 18,
+                  //     // fitBoundsOptions: ,
+                  //     // maxClusterRadius: 120,
+                  //     size: const Size(40, 40),
+                  //     zoomToBoundsOnClick: true,
+                  //     // fitBoundsOptions: const FitBoundsOptions(
+                  //     //   padding: EdgeInsets.all(50),
+                  //     // ),
+                  //     // spiderfyCircleRadius: 0,
+                  //     // circleSpiralSwitchover: 100000,
+
+                  //     markers: points.value
+                  //             ?.map(
+                  //               (e) => Marker(
+                  //                 point: e.latLng,
+                  //                 builder: (context) => const Icon(
+                  //                   Icons.circle_rounded,
+                  //                   color: Colors.amber,
+                  //                   size: 16.0,
+                  //                   // color: selectedFixedPoint
+                  //                   //             .value?.metadata?["id"] ==
+                  //                   //         e.metadata?["id"]
+                  //                   //     ? Colors.indigo
+                  //                   //     : Colors.amber,
+                  //                   // size: selectedFixedPoint
+                  //                   //             .value?.metadata?["id"] ==
+                  //                   //         e.metadata?["id"]
+                  //                   //     ? 20.0
+                  //                   //     : 16.0,
+                  //                 ),
+                  //               ),
+                  //             )
+                  //             .toList() ??
+                  //         [],
+                  //     // polygonOptions: const PolygonOptions(
+                  //     //   borderColor: Colors.blueAccent,
+                  //     //   color: Colors.black12,
+                  //     //   borderStrokeWidth: 3,
+                  //     // ),
+                  //     // centerMarkerOnClick: true,
+                  //     builder: (context, markers) {
+                  //       return FloatingActionButton(
+                  //         child: Text(markers.length.toString()),
+                  //         onPressed: null,
+                  //       );
+                  //     },
+                  //   ),
+                  // ),
                 ],
               ),
               manualMode.value
@@ -295,30 +370,63 @@ class GeoFormMapWidget extends HookWidget {
                 alignment: Alignment.bottomRight,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Material(
-                    borderRadius: BorderRadius.circular(8.0),
-                    // color: Colors.transparent,
-                    child: Ink(
-                      decoration: const ShapeDecoration(
-                        // color: Colors.black,
-                        // color: ,
-                        shape: CircleBorder(),
-                      ),
-                      child: IconButton(
-                        onPressed: () {
-                          selectedPosition.value = userPosition.value;
-                          _animatedMapMove(
-                            mapController.value,
-                            mapAnimationController,
-                            latLngFromPosition(userPosition.value),
-                            16,
-                          );
-                        },
-                        icon: const Icon(
-                          Icons.gps_fixed,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Material(
+                        borderRadius: BorderRadius.circular(8.0),
+                        // color: Colors.transparent,
+                        child: Ink(
+                          decoration: const ShapeDecoration(
+                            // color: Colors.black,
+                            // color: ,
+                            shape: CircleBorder(),
+                          ),
+                          child: IconButton(
+                            onPressed: () {
+                              selectedPosition.value = userPosition.value;
+                              _animatedMapMove(
+                                mapController.value,
+                                mapAnimationController,
+                                latLngFromPosition(userPosition.value),
+                                16,
+                              );
+                            },
+                            icon: const Icon(
+                              Icons.circle_outlined,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Material(
+                          borderRadius: BorderRadius.circular(8.0),
+                          // color: Colors.transparent,
+                          child: Ink(
+                            decoration: const ShapeDecoration(
+                              // color: Colors.black,
+                              // color: ,
+                              shape: CircleBorder(),
+                            ),
+                            child: IconButton(
+                              onPressed: () {
+                                selectedPosition.value = userPosition.value;
+                                _animatedMapMove(
+                                  mapController.value,
+                                  mapAnimationController,
+                                  latLngFromPosition(userPosition.value),
+                                  16,
+                                );
+                              },
+                              icon: const Icon(
+                                Icons.gps_fixed,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -373,35 +481,9 @@ class GeoFormMapWidget extends HookWidget {
                   vertical: 0.0,
                 ),
                 alignment: Alignment.centerLeft,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Latitude: ${selectedPosition.value.latitude}",
-                      style: GoogleFonts.openSans(
-                        fontSize: 14.0,
-                        color: Colors.grey,
-                        // fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      "Longitude: ${selectedPosition.value.longitude}",
-                      style: GoogleFonts.openSans(
-                        fontSize: 14.0,
-                        color: Colors.grey,
-                        // fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      "Accuracy: ${selectedPosition.value.accuracy.toStringAsFixed(2)}",
-                      style: GoogleFonts.openSans(
-                        fontSize: 14.0,
-                        color: Colors.grey,
-                        // fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                child: BasicTextualInformation(
+                  selectedPosition: selectedPosition.value,
+                  metadata: selectedFixedPoint.value?.metadata,
                 ),
               ),
               Padding(
@@ -410,7 +492,8 @@ class GeoFormMapWidget extends HookWidget {
                   horizontal: 16.0,
                 ),
                 child: ButtonBar(
-                  // buttonTextTheme: ButtonTextTheme.primary,
+                  // buttonTextTheme: ButtonTextTheme.accent,
+
                   alignment: MainAxisAlignment.end,
                   children: [
                     TextButton.icon(
@@ -434,15 +517,16 @@ class GeoFormMapWidget extends HookWidget {
                     ),
                     ElevatedButton(
                       clipBehavior: Clip.antiAlias,
+
                       // style: ButtonStyle(
                       //   shadowColor: Colors.blue,
                       // ),
-                      style: manualMode.value
-                          ? ButtonStyle(
-                              backgroundColor:
-                                  MaterialStateProperty.all(Colors.pink),
-                            )
-                          : null,
+                      // style: manualMode.value
+                      //     ? ButtonStyle(
+                      //         backgroundColor:
+                      //             MaterialStateProperty.all(Colors.pink),
+                      //       )
+                      //     : null,
                       autofocus: true,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -457,7 +541,56 @@ class GeoFormMapWidget extends HookWidget {
                           ),
                         ),
                       ),
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => Scaffold(
+                              appBar: AppBar(
+                                title: Text("Nuevo Registro"),
+                              ),
+                              floatingActionButton:
+                                  FloatingActionButton.extended(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                label: const Text(
+                                  "Registrar",
+                                  // style: GoogleFonts.openSans(
+                                  //     // fontSize: 18.0,
+                                  //     // fontWeight: FontWeight.bold,
+                                  //     ),
+                                ),
+                                icon: const Icon(Icons.save),
+                              ),
+                              body: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        BasicTextualInformation(
+                                          selectedPosition:
+                                              selectedPosition.value,
+                                          metadata: selectedFixedPoint
+                                              .value?.metadata,
+                                        ),
+                                      ],
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 16.0),
+                                      child: Row(
+                                        children: [
+                                          form,
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                       // => setState(() => _showMyDialog()),
                     ),
                   ],
