@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
+import 'package:geoformflutter/geoform/entities.dart';
 import 'package:geoformflutter/geoform/geolocation.dart';
 import 'package:geoformflutter/geoform/logger.dart';
+import 'package:geoformflutter/geoform/user.dart';
 import 'package:geoformflutter/geoform/utils.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -22,8 +26,19 @@ class CachedTileProvider extends TileProvider {
 
 class GeoFormMapWidget extends HookWidget {
   final MapController mapController = MapController();
+  final String name;
+  final Widget form;
+  final UserInformation user;
 
-  GeoFormMapWidget({Key? key}) : super(key: key);
+  List<GeoFormFixedPoint>? fixedPoints;
+
+  GeoFormMapWidget({
+    Key? key,
+    required this.name,
+    required this.form,
+    required this.user,
+    this.fixedPoints,
+  }) : super(key: key);
 
   void _animatedMapMove(
     AnimationController animationController,
@@ -74,6 +89,8 @@ class GeoFormMapWidget extends HookWidget {
     animationController.forward();
   }
 
+  StreamSubscription? subscription;
+
   @override
   Widget build(BuildContext context) {
     final userPosition = useState(Position.fromMap({
@@ -81,9 +98,36 @@ class GeoFormMapWidget extends HookWidget {
       "longitude": -77.019346,
     }));
 
+    final selectedPosition = useState(userPosition.value);
+
     final mapAnimationController = useAnimationController(
       duration: const Duration(milliseconds: 820),
     );
+
+    final manualMode = useState(false);
+
+    useEffect(() {
+      // logger.d(manualMode.value);
+      if (manualMode.value) {
+        subscription = mapController.mapEventStream.listen((event) {
+          // logger.d(event.center);
+          selectedPosition.value = Position(
+            longitude: event.center.longitude,
+            latitude: event.center.latitude,
+            timestamp: DateTime.now(),
+            accuracy: 0.0,
+            altitude: 0.0,
+            heading: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+          );
+        });
+      }
+
+      if (manualMode.value == false) {
+        subscription?.cancel();
+      }
+    }, [manualMode.value]);
 
     useEffect(() {
       determinePosition()
@@ -156,6 +200,15 @@ class GeoFormMapWidget extends HookWidget {
                   // GeoFormStaticLayer(fixedPoint: fixedPoint)
                 ],
               ),
+              manualMode.value
+                  ? const Center(
+                      child: Icon(
+                        Icons.add,
+                        color: Colors.pink,
+                        size: 42,
+                      ),
+                    )
+                  : Container(),
               Align(
                 // offset: const Offset(0, 100),
                 alignment: Alignment.bottomRight,
@@ -171,14 +224,16 @@ class GeoFormMapWidget extends HookWidget {
                         shape: CircleBorder(),
                       ),
                       child: IconButton(
-                        onPressed: () => _animatedMapMove(
-                          mapAnimationController,
-                          latLngFromPosition(userPosition.value),
-                          16,
-                        ),
+                        onPressed: () {
+                          selectedPosition.value = userPosition.value;
+                          _animatedMapMove(
+                            mapAnimationController,
+                            latLngFromPosition(userPosition.value),
+                            16,
+                          );
+                        },
                         icon: const Icon(
                           Icons.gps_fixed,
-                          // color: Colors.,
                         ),
                       ),
                     ),
@@ -205,14 +260,15 @@ class GeoFormMapWidget extends HookWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Hola, Bregy!",
+                            "Hola, ${user.name}!",
                             style: GoogleFonts.openSans(
                               fontSize: 16.0,
+                              color: Colors.grey[500],
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            "Registra rociados",
+                            "Registra ${name}",
                             style: GoogleFonts.openSans(
                               fontSize: 20.0,
                               // fontWeight: FontWeight.bold,
@@ -239,14 +295,8 @@ class GeoFormMapWidget extends HookWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    // const Expanded(
-                    //   child: Text(
-                    //     "Current Position",
-                    //     style: const TextStyle(fontSize: 18.0),
-                    //   ),
-                    // ),
                     Text(
-                      "Latitude: ${userPosition.value.latitude}",
+                      "Latitude: ${selectedPosition.value.latitude}",
                       style: GoogleFonts.openSans(
                         fontSize: 14.0,
                         color: Colors.grey,
@@ -254,7 +304,7 @@ class GeoFormMapWidget extends HookWidget {
                       ),
                     ),
                     Text(
-                      "Longitude: ${userPosition.value.longitude}",
+                      "Longitude: ${selectedPosition.value.longitude}",
                       style: GoogleFonts.openSans(
                         fontSize: 14.0,
                         color: Colors.grey,
@@ -262,7 +312,7 @@ class GeoFormMapWidget extends HookWidget {
                       ),
                     ),
                     Text(
-                      "Accuracy: ${userPosition.value.accuracy.toStringAsFixed(2)}",
+                      "Accuracy: ${selectedPosition.value.accuracy.toStringAsFixed(2)}",
                       style: GoogleFonts.openSans(
                         fontSize: 14.0,
                         color: Colors.grey,
@@ -278,27 +328,40 @@ class GeoFormMapWidget extends HookWidget {
                   horizontal: 16.0,
                 ),
                 child: ButtonBar(
+                  // buttonTextTheme: ButtonTextTheme.primary,
                   alignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(
-                      child: Text(
-                        "Seleccionar",
-                        style: GoogleFonts.openSans(
-                          fontSize: 16.0,
-                          // fontWeight: FontWeight.bold,
+                    TextButton.icon(
+                      icon: Icon(
+                        manualMode.value ? Icons.close : Icons.add,
+                      ),
+                      label: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 6.0,
+                        ),
+                        child: Text(
+                          "Anotar",
+                          style: GoogleFonts.openSans(
+                            fontSize: 16.0,
+                            // fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                      onPressed: () {},
+                      onPressed: () => manualMode.value = !manualMode.value,
                       // setState(() => currentMode = GeoFormMode.auto),
                     ),
                     ElevatedButton(
                       clipBehavior: Clip.antiAlias,
+                      // style: ButtonStyle(
+                      //   shadowColor: Colors.blue,
+                      // ),
+                      style: manualMode.value
+                          ? ButtonStyle(
+                              backgroundColor:
+                                  MaterialStateProperty.all(Colors.pink),
+                            )
+                          : null,
                       autofocus: true,
-                      style: const ButtonStyle(
-
-                          // minimumSize:
-                          // visualDensity: VisualDensity.standard,
-                          ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 60.0,
