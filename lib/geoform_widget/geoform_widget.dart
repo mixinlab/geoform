@@ -9,6 +9,8 @@ class GeoFormWidget extends HookWidget {
   final Widget form;
   final UserInformation userInformation;
 
+  String? registerVerb;
+
   List<GeoFormFixedPoint>? fixedPoints;
 
   GeoFormWidget({
