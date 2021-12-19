@@ -9,13 +9,13 @@ class GeoFormWidget extends HookWidget {
   final Widget form;
   final UserInformation userInformation;
 
-  String? registerVerb;
+  final List<GeoFormFixedPoint>? points;
 
-  List<GeoFormFixedPoint>? fixedPoints;
+  String? registerVerb;
 
   GeoFormWidget({
     Key? key,
-    List<GeoFormFixedPoint>? fixedPoints,
+    this.points,
     required this.name,
     required this.userInformation,
     required this.form,
@@ -23,11 +23,13 @@ class GeoFormWidget extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    print("widget build: ${points?.length}");
+
     return Scaffold(
       body: GeoFormMapWidget(
         name: name,
         form: form,
-        // fixedPoints: fixedPoints,
+        points: points,
         user: userInformation,
       ),
     );

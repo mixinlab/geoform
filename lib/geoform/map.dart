@@ -1,11 +1,9 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
-import 'package:geoformflutter/geocore.dart';
 import 'package:geoformflutter/geoform/entities.dart';
 import 'package:geoformflutter/geoform/geolocation.dart';
 import 'package:geoformflutter/geoform/logger.dart';
@@ -28,27 +26,22 @@ class CachedTileProvider extends TileProvider {
   }
 }
 
-String geoPoints({
-  int? limit = 10,
-  String? baseURL = "https://geocore.innovalab.minsky.cc/api/v1",
-  String? group = "ee73a646-0066-4f4a-8ee9-358e77ebba7f",
-}) =>
-    '$baseURL/group/$group?limit=$limit';
-
 class GeoFormMapWidget extends HookWidget {
   final String name;
   final Widget form;
   final UserInformation user;
 
-  // List<GeoFormFixedPoint>? fixedPoints;
+  // List<GeoFormFixedPoint>? points;
   StreamSubscription? subscription;
+
+  final List<GeoFormFixedPoint>? points;
 
   GeoFormMapWidget({
     Key? key,
     required this.name,
     required this.form,
     required this.user,
-    // this.fixedPoints,
+    this.points,
   }) : super(key: key);
 
   void _animatedMapMove(
@@ -120,33 +113,6 @@ class GeoFormMapWidget extends HookWidget {
     final mapController = useState(MapController());
 
     final manualMode = useState(false);
-
-// =============================
-    final points = useState<List<GeoFormFixedPoint>?>([]);
-
-    useEffect(() {
-      Dio().get<List<dynamic>>(geoPoints(limit: 1000)).then((result) {
-        points.value = result.data
-            ?.map((e) => GeoPoint.fromJson(e))
-            .map(
-              (e) => GeoFormFixedPoint(
-                latLng: LatLng(
-                  e.lat ?? 0.0,
-                  e.lng ?? 0.0,
-                ),
-                metadata: {
-                  "id": e.id,
-                  "unicode": e.unicode,
-                },
-              ),
-            )
-            .toList();
-      });
-    }, []);
-
-    // logger.d(points.value);
-
-// =============================
 
     useEffect(() {
       logger.d(manualMode.value);
@@ -276,7 +242,7 @@ class GeoFormMapWidget extends HookWidget {
                   // GeoFormStaticLayer(fixedPoint: fixedPoint)
                   MarkerLayerWidget(
                     options: MarkerLayerOptions(
-                      markers: points.value
+                      markers: points
                               ?.map(
                                 (e) => Marker(
                                   point: e.latLng,
@@ -467,11 +433,11 @@ class GeoFormMapWidget extends HookWidget {
                         ],
                       ),
                     ),
-                    const Image(
-                      image: AssetImage('assets/contract.png'),
-                      height: 48.0,
-                      width: 48.0,
-                    ),
+                    // const Image(
+                    //   image: AssetImage('assets/contract.png'),
+                    //   height: 48.0,
+                    //   width: 48.0,
+                    // ),
                   ],
                 ),
               ),

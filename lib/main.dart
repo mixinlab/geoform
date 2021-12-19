@@ -12,47 +12,44 @@ void main() {
   runApp(const AppImplementation());
 }
 
-// String geoPoints({
-//   int? limit = 10,
-//   String? baseURL = "https://geocore.innovalab.minsky.cc/api/v1",
-//   String? group = "ee73a646-0066-4f4a-8ee9-358e77ebba7f",
-// }) =>
-//     '$baseURL/group/$group?limit=$limit';
+String geoPoints({
+  int? limit = 10,
+  String? baseURL = "https://geocore.innovalab.minsky.cc/api/v1",
+  String? group = "ee73a646-0066-4f4a-8ee9-358e77ebba7f",
+}) =>
+    '$baseURL/group/$group?limit=$limit';
 
 class AppImplementation extends HookWidget {
   const AppImplementation({
     Key? key,
   }) : super(key: key);
 
-  // {
-  //   // super(key: key);
-  // }
-
   @override
   Widget build(BuildContext context) {
-    // final points = useState<List<GeoFormFixedPoint>?>([]);
+    final points = useState<List<GeoFormFixedPoint>?>([]);
 
-    // useEffect(() {
-    //   Dio().get<List<dynamic>>(geoPoints(limit: 10)).then((result) {
-    //     points.value = result.data
-    //         ?.map((e) => GeoPoint.fromJson(e))
-    //         .map(
-    //           (e) => GeoFormFixedPoint(
-    //             latLng: LatLng(
-    //               e.lat ?? 0.0,
-    //               e.lng ?? 0.0,
-    //             ),
-    //             metadata: {
-    //               "id": e.id,
-    //               "unicode": e.unicode,
-    //             },
-    //           ),
-    //         )
-    //         .toList();
-    //   });
-    // }, []);
+    useEffect(() {
+      Dio().get<List<dynamic>>(geoPoints(limit: 100)).then((result) {
+        points.value = result.data
+            ?.map((e) => GeoPoint.fromJson(e))
+            .map(
+              (e) => GeoFormFixedPoint(
+                latLng: LatLng(
+                  e.lat ?? 0.0,
+                  e.lng ?? 0.0,
+                ),
+                metadata: {
+                  "id": e.id,
+                  "unicode": e.unicode,
+                },
+              ),
+            )
+            .toList(growable: false);
+      });
+    }, []);
 
     // logger.d(points.value);
+    print("app build: ${points.value?.length}");
 
     return MaterialApp(
       title: 'Flutter Map Test',
@@ -67,7 +64,7 @@ class AppImplementation extends HookWidget {
       home: GeoFormWidget(
         name: "Rociados Pendientes",
         form: const Text("form"),
-        // fixedPoints: points.value,
+        points: points.value,
         userInformation: UserInformation(
           id: "1",
           name: "Bregy Malpartida",
