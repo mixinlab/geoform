@@ -1,20 +1,18 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
-import 'package:geoformflutter/geoform/entities.dart';
-import 'package:geoformflutter/geoform/geolocation.dart';
-import 'package:geoformflutter/geoform/logger.dart';
-import 'package:geoformflutter/geoform/map/basic_information.dart';
-import 'package:geoformflutter/geoform/user.dart';
-import 'package:geoformflutter/geoform/utils.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-// import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
+import 'package:geoformflutter/geoform/entities.dart';
+import 'package:geoformflutter/geoform/geolocation.dart';
+import 'package:geoformflutter/geoform/map/animation.dart';
+import 'package:geoformflutter/geoform/map/basic_information.dart';
+import 'package:geoformflutter/geoform/map/marker.dart';
+import 'package:geoformflutter/geoform/user.dart';
+import 'package:geoformflutter/geoform/utils.dart';
 
 class CachedTileProvider extends TileProvider {
   const CachedTileProvider();
@@ -30,11 +28,11 @@ class GeoFormMapWidget extends HookWidget {
   final String name;
   final Widget form;
   final UserInformation user;
-
-  // List<GeoFormFixedPoint>? points;
-  StreamSubscription? subscription;
-
   final List<GeoFormFixedPoint>? points;
+  final MapController? mapController;
+  final Widget Function(BuildContext, GeoFormFixedPoint, bool)? markerBuilder;
+
+  StreamSubscription? subscription;
 
   GeoFormMapWidget({
     Key? key,
@@ -42,58 +40,9 @@ class GeoFormMapWidget extends HookWidget {
     required this.form,
     required this.user,
     this.points,
+    this.mapController,
+    this.markerBuilder,
   }) : super(key: key);
-
-  void _animatedMapMove(
-    MapController mapController,
-    AnimationController animationController,
-    LatLng destLocation,
-    double destZoom,
-  ) {
-    final _latTween = Tween<double>(
-      begin: mapController.center.latitude,
-      end: destLocation.latitude,
-    );
-
-    final _lngTween = Tween<double>(
-      begin: mapController.center.longitude,
-      end: destLocation.longitude,
-    );
-
-    final _zoomTween = Tween<double>(
-      begin: mapController.zoom,
-      end: destZoom,
-    );
-
-    Animation<double> animation = CurvedAnimation(
-      parent: animationController,
-      curve: Curves.fastOutSlowIn,
-    );
-
-    animationController.reset();
-
-    animationController.addListener(() {
-      mapController.move(
-          LatLng(
-            _latTween.evaluate(animation),
-            _lngTween.evaluate(animation),
-          ),
-          _zoomTween.evaluate(animation));
-    });
-
-    animationController.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        // animationController.removeListener(() {});
-        // animationController.dispose();
-        // animationController.reset();
-      } else if (status == AnimationStatus.dismissed) {
-        // animationController.removeListener(mapMove);
-        // animationController.reset();
-      }
-    });
-
-    animationController.forward();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -102,24 +51,19 @@ class GeoFormMapWidget extends HookWidget {
       "longitude": -77.019346,
     }));
 
+    final manualMode = useState(false);
+    final mapController = useState(this.mapController ?? MapController());
     final selectedPosition = useState(userPosition.value);
-
     final selectedFixedPoint = useState<GeoFormFixedPoint?>(null);
 
     final mapAnimationController = useAnimationController(
       duration: const Duration(milliseconds: 820),
     );
 
-    final mapController = useState(MapController());
-
-    final manualMode = useState(false);
-
     useEffect(() {
-      logger.d(manualMode.value);
       if (manualMode.value) {
         selectedFixedPoint.value = null;
         subscription = mapController.value.mapEventStream.listen((event) {
-          // logger.d(event.center);
           selectedPosition.value = Position(
             longitude: event.center.longitude,
             latitude: event.center.latitude,
@@ -142,23 +86,23 @@ class GeoFormMapWidget extends HookWidget {
       determinePosition()
           .then((value) {
             userPosition.value = value;
-            _animatedMapMove(
+            animatedMapMove(
               mapController.value,
               mapAnimationController,
               latLngFromPosition(userPosition.value),
               16,
             );
           })
-          .catchError((error) => logger.e(error))
+          .catchError((error) => print(error))
           .whenComplete(() {
             watchUserPosition()
                 .then(
                   (stream) => stream.listen(
                     (value) => userPosition.value = value,
-                    onError: (error) => logger.e(error),
+                    onError: (error) => print(error),
                   ),
                 )
-                .catchError((error) => logger.e(error));
+                .catchError((error) => print(error));
           });
     }, []);
 
@@ -180,32 +124,12 @@ class GeoFormMapWidget extends HookWidget {
 
     return Column(
       children: [
-        // const Text("Hello World"),
         Expanded(
-          // constraints: const BoxConstraints(maxHeight: 550.0),
-          // width: 200.0,
           child: Stack(
             children: [
               FlutterMap(
                 mapController: mapController.value,
                 options: MapOptions(
-                  // onTap: (tapPosition, point) {
-                  //   logger.i(point);
-
-                  //   // final distances =
-                  //   points.value?.forEach((e) {
-                  //     final diff = Geolocator.distanceBetween(
-                  //       point.latitude,
-                  //       point.longitude,
-                  //       e.latLng.latitude,
-                  //       e.latLng.longitude,
-                  //     );
-                  //     logger.i(diff);
-                  //     if (diff < 500) {
-                  //       selectedFixedPoint.value = e;
-                  //     }
-                  //   });
-                  // },
                   center: latLngFromPosition(userPosition.value),
                   zoom: 12.0,
                   maxZoom: 18,
@@ -220,17 +144,11 @@ class GeoFormMapWidget extends HookWidget {
                   TileLayerWidget(
                     options: TileLayerOptions(
                       urlTemplate:
-                          "https://api.maptiler.com/maps/voyager/{z}/{x}/{y}@2x.png?key=OvCbZy2nzfWql0vtrkbj",
-                      // urlTemplate:
-                      //     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                          "https://api.maptiler.com/maps/voyager/{z}/{x}/{y}@2x.png"
+                          "?key=OvCbZy2nzfWql0vtrkbj",
+                      // urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                       // subdomains: ['a', 'b', 'c'],
                       tileProvider: const CachedTileProvider(),
-                      // attributionBuilder: (_) {
-                      //   return const Padding(
-                      //     padding: EdgeInsets.all(4.0),
-                      //     child: Text("© OpenStreetMap contributors"),
-                      //   );
-                      // },
                     ),
                   ),
                   LocationMarkerLayerWidget(
@@ -239,7 +157,6 @@ class GeoFormMapWidget extends HookWidget {
                       showHeadingSector: false,
                     ),
                   ),
-                  // GeoFormStaticLayer(fixedPoint: fixedPoint)
                   MarkerLayerWidget(
                     options: MarkerLayerOptions(
                       markers: points
@@ -248,21 +165,18 @@ class GeoFormMapWidget extends HookWidget {
                                   point: e.latLng,
                                   builder: (context) => GestureDetector(
                                     onTap: () => selectedFixedPoint.value = e,
-                                    child: Icon(
-                                      Icons.circle_rounded,
-                                      // color: Colors.amber,
-                                      // size: 16.0,
-                                      color: selectedFixedPoint
-                                                  .value?.metadata?["id"] ==
-                                              e.metadata?["id"]
-                                          ? Colors.indigo
-                                          : Colors.amber,
-                                      size: selectedFixedPoint
-                                                  .value?.metadata?["id"] ==
-                                              e.metadata?["id"]
-                                          ? 20.0
-                                          : 16.0,
-                                    ),
+                                    child: markerBuilder != null
+                                        ? markerBuilder!(
+                                            context,
+                                            e,
+                                            selectedFixedPoint
+                                                    .value?.metadata?["id"] ==
+                                                e.metadata?["id"])
+                                        : DefaultMarker(
+                                            isSelected: selectedFixedPoint
+                                                    .value?.metadata?["id"] ==
+                                                e.metadata?["id"],
+                                          ),
                                   ),
                                 ),
                               )
@@ -270,56 +184,6 @@ class GeoFormMapWidget extends HookWidget {
                           [],
                     ),
                   ),
-                  // MarkerClusterLayerWidget(
-                  //   options: MarkerClusterLayerOptions(
-                  //     // disableClusteringAtZoom: 18,
-                  //     // fitBoundsOptions: ,
-                  //     // maxClusterRadius: 120,
-                  //     size: const Size(40, 40),
-                  //     zoomToBoundsOnClick: true,
-                  //     // fitBoundsOptions: const FitBoundsOptions(
-                  //     //   padding: EdgeInsets.all(50),
-                  //     // ),
-                  //     // spiderfyCircleRadius: 0,
-                  //     // circleSpiralSwitchover: 100000,
-
-                  //     markers: points.value
-                  //             ?.map(
-                  //               (e) => Marker(
-                  //                 point: e.latLng,
-                  //                 builder: (context) => const Icon(
-                  //                   Icons.circle_rounded,
-                  //                   color: Colors.amber,
-                  //                   size: 16.0,
-                  //                   // color: selectedFixedPoint
-                  //                   //             .value?.metadata?["id"] ==
-                  //                   //         e.metadata?["id"]
-                  //                   //     ? Colors.indigo
-                  //                   //     : Colors.amber,
-                  //                   // size: selectedFixedPoint
-                  //                   //             .value?.metadata?["id"] ==
-                  //                   //         e.metadata?["id"]
-                  //                   //     ? 20.0
-                  //                   //     : 16.0,
-                  //                 ),
-                  //               ),
-                  //             )
-                  //             .toList() ??
-                  //         [],
-                  //     // polygonOptions: const PolygonOptions(
-                  //     //   borderColor: Colors.blueAccent,
-                  //     //   color: Colors.black12,
-                  //     //   borderStrokeWidth: 3,
-                  //     // ),
-                  //     // centerMarkerOnClick: true,
-                  //     builder: (context, markers) {
-                  //       return FloatingActionButton(
-                  //         child: Text(markers.length.toString()),
-                  //         onPressed: null,
-                  //       );
-                  //     },
-                  //   ),
-                  // ),
                 ],
               ),
               manualMode.value
@@ -351,7 +215,7 @@ class GeoFormMapWidget extends HookWidget {
                           child: IconButton(
                             onPressed: () {
                               selectedPosition.value = userPosition.value;
-                              _animatedMapMove(
+                              animatedMapMove(
                                 mapController.value,
                                 mapAnimationController,
                                 latLngFromPosition(userPosition.value),
@@ -378,7 +242,7 @@ class GeoFormMapWidget extends HookWidget {
                             child: IconButton(
                               onPressed: () {
                                 selectedPosition.value = userPosition.value;
-                                _animatedMapMove(
+                                animatedMapMove(
                                   mapController.value,
                                   mapAnimationController,
                                   latLngFromPosition(userPosition.value),
@@ -424,7 +288,7 @@ class GeoFormMapWidget extends HookWidget {
                             ),
                           ),
                           Text(
-                            "Registra ${name}",
+                            "Registra $name",
                             style: GoogleFonts.openSans(
                               fontSize: 20.0,
                               // fontWeight: FontWeight.bold,
@@ -433,11 +297,6 @@ class GeoFormMapWidget extends HookWidget {
                         ],
                       ),
                     ),
-                    // const Image(
-                    //   image: AssetImage('assets/contract.png'),
-                    //   height: 48.0,
-                    //   width: 48.0,
-                    // ),
                   ],
                 ),
               ),
@@ -483,16 +342,6 @@ class GeoFormMapWidget extends HookWidget {
                     ),
                     ElevatedButton(
                       clipBehavior: Clip.antiAlias,
-
-                      // style: ButtonStyle(
-                      //   shadowColor: Colors.blue,
-                      // ),
-                      // style: manualMode.value
-                      //     ? ButtonStyle(
-                      //         backgroundColor:
-                      //             MaterialStateProperty.all(Colors.pink),
-                      //       )
-                      //     : null,
                       autofocus: true,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -512,7 +361,7 @@ class GeoFormMapWidget extends HookWidget {
                           MaterialPageRoute(
                             builder: (context) => Scaffold(
                               appBar: AppBar(
-                                title: Text("Nuevo Registro"),
+                                title: const Text("Nuevo Registro"),
                               ),
                               floatingActionButton:
                                   FloatingActionButton.extended(
@@ -521,10 +370,6 @@ class GeoFormMapWidget extends HookWidget {
                                 },
                                 label: const Text(
                                   "Registrar",
-                                  // style: GoogleFonts.openSans(
-                                  //     // fontSize: 18.0,
-                                  //     // fontWeight: FontWeight.bold,
-                                  //     ),
                                 ),
                                 icon: const Icon(Icons.save),
                               ),

@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:geoformflutter/geocore.dart';
 import 'package:geoformflutter/geoform/entities.dart';
-import 'package:geoformflutter/geoform/logger.dart';
+import 'package:geoformflutter/geoform/map/map.dart';
 import 'package:geoformflutter/geoform/user.dart';
-import 'package:geoformflutter/geoform_widget/geoform_widget.dart';
 import 'package:dio/dio.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -29,27 +28,29 @@ class AppImplementation extends HookWidget {
     final points = useState<List<GeoFormFixedPoint>?>([]);
 
     useEffect(() {
-      Dio().get<List<dynamic>>(geoPoints(limit: 100)).then((result) {
-        points.value = result.data
-            ?.map((e) => GeoPoint.fromJson(e))
-            .map(
-              (e) => GeoFormFixedPoint(
-                latLng: LatLng(
-                  e.lat ?? 0.0,
-                  e.lng ?? 0.0,
+      Dio().get<List<dynamic>>(geoPoints(limit: 100)).then(
+        (result) {
+          points.value = result.data
+              ?.map((e) => GeoPoint.fromJson(e))
+              .map(
+                (e) => GeoFormFixedPoint(
+                  latLng: LatLng(
+                    e.lat ?? 0.0,
+                    e.lng ?? 0.0,
+                  ),
+                  metadata: {
+                    "id": e.id,
+                    "unicode": e.unicode,
+                  },
                 ),
-                metadata: {
-                  "id": e.id,
-                  "unicode": e.unicode,
-                },
-              ),
-            )
-            .toList(growable: false);
-      });
+              )
+              .toList(growable: false);
+        },
+      );
     }, []);
 
     // logger.d(points.value);
-    print("app build: ${points.value?.length}");
+    // print("app build: ${points.value?.length}");
 
     return MaterialApp(
       title: 'Flutter Map Test',
@@ -61,13 +62,15 @@ class AppImplementation extends HookWidget {
       theme: ThemeData(
         primarySwatch: Colors.teal,
       ),
-      home: GeoFormWidget(
-        name: "Rociados Pendientes",
-        form: const Text("form"),
-        points: points.value,
-        userInformation: UserInformation(
-          id: "1",
-          name: "Bregy Malpartida",
+      home: Scaffold(
+        body: GeoFormMapWidget(
+          name: "Rociados Pendientes",
+          form: const Text("form"),
+          points: points.value,
+          user: UserInformation(
+            id: "1",
+            name: "Bregy Malpartida",
+          ),
         ),
       ),
     );
