@@ -23,6 +23,24 @@ class CachedTileProvider extends TileProvider {
   }
 }
 
+class FormWrapperOptions {
+  final Key? key;
+  final String title;
+  final bool withFloatingButton;
+  final String floatingButtonLabel;
+  final void Function()? onFloatingButtonPressed;
+  final IconData icon;
+
+  FormWrapperOptions({
+    this.key,
+    required this.title,
+    this.withFloatingButton = true,
+    this.floatingButtonLabel = "Registrar",
+    this.icon = Icons.save,
+    this.onFloatingButtonPressed,
+  });
+}
+
 class GeoFormMapWidget extends HookWidget {
   final String name;
   final Widget form;
@@ -33,17 +51,29 @@ class GeoFormMapWidget extends HookWidget {
 
   final TileLayerOptions mapLayerOptions;
 
-  StreamSubscription? subscription;
+  final String primaryButtonLabel;
+  final String secondaryButtonLabel;
+  final bool withPrimaryButton;
+  final bool withSecondaryButton;
+
+  final FormWrapperOptions formWrapperOptions;
+
+  StreamSubscription<MapEvent>? subscription;
 
   GeoFormMapWidget({
     Key? key,
     required this.mapLayerOptions,
     required this.name,
     required this.form,
+    required this.formWrapperOptions,
     required this.user,
-    this.points,
     this.mapController,
     this.markerBuilder,
+    this.points,
+    this.primaryButtonLabel = "Registrar",
+    this.secondaryButtonLabel = "Anotar",
+    this.withPrimaryButton = true,
+    this.withSecondaryButton = true,
   }) : super(key: key);
 
   @override
@@ -318,13 +348,13 @@ class GeoFormMapWidget extends HookWidget {
                       icon: Icon(
                         manualMode.value ? Icons.close : Icons.add,
                       ),
-                      label: const Padding(
-                        padding: EdgeInsets.symmetric(
+                      label: Padding(
+                        padding: const EdgeInsets.symmetric(
                           vertical: 6.0,
                         ),
                         child: Text(
-                          "Anotar",
-                          style: TextStyle(
+                          secondaryButtonLabel,
+                          style: const TextStyle(
                             fontSize: 16.0,
                             // fontWeight: FontWeight.bold,
                           ),
@@ -336,14 +366,14 @@ class GeoFormMapWidget extends HookWidget {
                     ElevatedButton(
                       clipBehavior: Clip.antiAlias,
                       autofocus: true,
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 60.0,
                           vertical: 12.0,
                         ),
                         child: Text(
-                          "Registrar",
-                          style: TextStyle(
+                          primaryButtonLabel,
+                          style: const TextStyle(
                             fontSize: 18.0,
                             // fontWeight: FontWeight.bold,
                           ),
@@ -354,17 +384,18 @@ class GeoFormMapWidget extends HookWidget {
                           MaterialPageRoute(
                             builder: (context) => Scaffold(
                               appBar: AppBar(
-                                title: const Text("Nuevo Registro"),
+                                title: Text(formWrapperOptions.title),
                               ),
                               floatingActionButton:
                                   FloatingActionButton.extended(
                                 onPressed: () {
+                                  formWrapperOptions.onFloatingButtonPressed
+                                      ?.call();
                                   Navigator.of(context).pop();
                                 },
-                                label: const Text(
-                                  "Registrar",
-                                ),
-                                icon: const Icon(Icons.save),
+                                label: Text(
+                                    formWrapperOptions.floatingButtonLabel),
+                                icon: Icon(formWrapperOptions.icon),
                               ),
                               body: Padding(
                                 padding: const EdgeInsets.all(16.0),
@@ -382,11 +413,7 @@ class GeoFormMapWidget extends HookWidget {
                                     ),
                                     Padding(
                                       padding: const EdgeInsets.only(top: 16.0),
-                                      child: Row(
-                                        children: [
-                                          form,
-                                        ],
-                                      ),
+                                      child: form,
                                     ),
                                   ],
                                 ),
