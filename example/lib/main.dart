@@ -52,6 +52,7 @@ class _MyAppState extends State<MyApp> {
           mapLayerOptions: tileLayerOptions,
           name: "Inspecciones",
           form: const Text("Form"),
+          formWrapperOptions: FormWrapperOptions(title: "Nuevo Registro"),
           user: UserInformation(id: "01", name: "User01"),
         ),
       ),
