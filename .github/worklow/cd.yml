@@ -1,0 +1,59 @@
+name: Publish package to pub.dev
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+env:
+  PUB_DEV_PROJECT_URL: https://pub.dev/packages/geoform/
+  GENERATED_CHANGELOG_FILE: CHANGELOG.md
+
+jobs:
+  publish:
+    name: Publish on pub.dev and Github
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          # flutter-version: "2.8.0"
+          channel: "stable"
+          cache: true
+
+      - name: Setup publish token
+        env:
+          FLUTTER_PUB_TOKEN: ${{ secrets.FLUTTER_PUB_TOKEN }}
+        run: flutter pub token add ${{ env.PUB_DEV_PROJECT_URL }} --env-var FLUTTER_PUB_TOKEN
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # - name: Analyze code (lint)
+      #   run: flutter analyze
+
+      # - name: Run tests
+      #   run: flutter test
+
+      # - name: Check Publish Warnings
+      #   run: flutter pub publish --dry-run
+
+      - name: Generate a changelog
+        uses: orhun/git-cliff-action@v1
+        env:
+          OUTPUT: ${{ env.GENERATED_CHANGELOG_FILE }}
+        with:
+          config: cliff.toml
+          args: -vv --latest
+
+      - name: Publish to Pub.dev
+        run: flutter pub publish -f
+
+      - name: Publish to Github
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          body_path: ${{ env.GENERATED_CHANGELOG_FILE }}
