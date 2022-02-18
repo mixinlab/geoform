@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
-
+import 'package:flutter/material.dart';
 import 'package:flutter_map/plugin_api.dart';
 import 'package:geoform/map/map.dart';
 import 'package:geoform/user.dart';
@@ -36,6 +35,12 @@ class _MyAppState extends State<MyApp> {
     setState(() {});
   }
 
+  final tileLayerOptions = TileLayerOptions(
+    urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    subdomains: ['a', 'b', 'c'],
+    tileProvider: const CachedTileProvider(),
+  );
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -44,11 +49,7 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: GeoFormMapWidget(
-          mapLayerOptions: TileLayerOptions(
-            urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-            subdomains: ['a', 'b', 'c'],
-            tileProvider: const CachedTileProvider(),
-          ),
+          mapLayerOptions: tileLayerOptions,
           name: "Inspecciones",
           form: const Text("Form"),
           user: UserInformation(id: "01", name: "User01"),
