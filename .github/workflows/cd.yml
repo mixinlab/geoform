@@ -2,7 +2,7 @@ name: Publish package to pub.dev
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "*.*.*"
 
 env:
   PUB_DEV_PROJECT_URL: https://pub.dev/packages/geoform/
