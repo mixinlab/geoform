@@ -46,6 +46,7 @@ class _MyAppState extends State<MyApp> {
         body: GeoFormMapWidget(
           mapLayerOptions: TileLayerOptions(
             urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            subdomains: ['a', 'b', 'c'],
             tileProvider: const CachedTileProvider(),
           ),
           name: "Inspecciones",
