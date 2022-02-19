@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/plugin_api.dart';
+import 'package:geoform/map/form_wrapper.dart';
 import 'package:geoform/map/map.dart';
 import 'package:geoform/user.dart';
 

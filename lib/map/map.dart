@@ -1,17 +1,18 @@
 import 'dart:async';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:geoform/entities.dart';
 import 'package:geoform/geolocation.dart';
 import 'package:geoform/map/animation.dart';
 import 'package:geoform/map/basic_information.dart';
+import 'package:geoform/map/form_wrapper.dart';
 import 'package:geoform/map/marker.dart';
 import 'package:geoform/user.dart';
 import 'package:geoform/utils.dart';
+import 'package:geolocator/geolocator.dart';
 
 class CachedTileProvider extends TileProvider {
   const CachedTileProvider();
@@ -23,27 +24,10 @@ class CachedTileProvider extends TileProvider {
   }
 }
 
-class FormWrapperOptions {
-  final Key? key;
-  final String title;
-  final bool withFloatingButton;
-  final String floatingButtonLabel;
-  final void Function()? onFloatingButtonPressed;
-  final IconData icon;
-
-  FormWrapperOptions({
-    this.key,
-    required this.title,
-    this.withFloatingButton = true,
-    this.floatingButtonLabel = "Registrar",
-    this.icon = Icons.save,
-    this.onFloatingButtonPressed,
-  });
-}
-
 class GeoFormMapWidget extends HookWidget {
   final String name;
   final Widget form;
+  final FormWrapperOptions formWrapperOptions;
   final UserInformation user;
   final List<GeoFormFixedPoint>? points;
   final MapController? mapController;
@@ -55,8 +39,6 @@ class GeoFormMapWidget extends HookWidget {
   final String secondaryButtonLabel;
   final bool withPrimaryButton;
   final bool withSecondaryButton;
-
-  final FormWrapperOptions formWrapperOptions;
 
   StreamSubscription<MapEvent>? subscription;
 
@@ -382,42 +364,11 @@ class GeoFormMapWidget extends HookWidget {
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) => Scaffold(
-                              appBar: AppBar(
-                                title: Text(formWrapperOptions.title),
-                              ),
-                              floatingActionButton:
-                                  FloatingActionButton.extended(
-                                onPressed: () {
-                                  formWrapperOptions.onFloatingButtonPressed
-                                      ?.call();
-                                  Navigator.of(context).pop();
-                                },
-                                label: Text(
-                                    formWrapperOptions.floatingButtonLabel),
-                                icon: Icon(formWrapperOptions.icon),
-                              ),
-                              body: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        BasicTextualInformation(
-                                          selectedPosition:
-                                              selectedPosition.value,
-                                          metadata: selectedFixedPoint
-                                              .value?.metadata,
-                                        ),
-                                      ],
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 16.0),
-                                      child: form,
-                                    ),
-                                  ],
-                                ),
-                              ),
+                            builder: (context) => GeoFormFormWrapperWidget(
+                              form: form,
+                              formWrapperOptions: formWrapperOptions,
+                              selectedFixedPoint: selectedFixedPoint,
+                              selectedPosition: selectedPosition,
                             ),
                           ),
                         );
