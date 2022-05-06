@@ -51,7 +51,6 @@ class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
   final String title;
 
   final GeoformMarkerBuilder<U>? markerBuilder;
-  final void Function(U marker)? onMarkerSelected;
 
   final Future<List<T>>? records;
   final List<U>? markers;
@@ -60,6 +59,7 @@ class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
 
   final GeoformMarkerDrawerBuilder<U>? markerDrawerBuilder;
 
+  final void Function(U marker)? onMarkerSelected;
   final void Function(T record)? onRecordSelected;
 
   @override
