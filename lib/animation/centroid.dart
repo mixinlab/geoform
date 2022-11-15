@@ -6,18 +6,18 @@ LatLng getCentroid({required List<FastMarker> markers, LatLng? defaultCenter}) {
     return defaultCenter ?? LatLng(0, 0);
   }
 
-  var _latitude = 0.0;
-  var _longitude = 0.0;
+  var latitude = 0.0;
+  var longitude = 0.0;
 
   for (final element in markers) {
-    _latitude += element.point.latitude;
-    _longitude += element.point.longitude;
+    latitude += element.point.latitude;
+    longitude += element.point.longitude;
   }
 
-  final _total = markers.length;
+  final total = markers.length;
 
-  _latitude /= _total;
-  _longitude /= _total;
+  latitude /= total;
+  longitude /= total;
 
-  return LatLng(_latitude, _longitude);
+  return LatLng(latitude, longitude);
 }

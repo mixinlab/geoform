@@ -8,17 +8,17 @@ void animatedMapMove(
   LatLng destLocation,
   double destZoom,
 ) {
-  final _latTween = Tween<double>(
+  final latTween = Tween<double>(
     begin: mapController!.center.latitude,
     end: destLocation.latitude,
   );
 
-  final _lngTween = Tween<double>(
+  final lngTween = Tween<double>(
     begin: mapController.center.longitude,
     end: destLocation.longitude,
   );
 
-  final _zoomTween = Tween<double>(
+  final zoomTween = Tween<double>(
     begin: mapController.zoom,
     end: destZoom,
   );
@@ -34,10 +34,10 @@ void animatedMapMove(
     ..addListener(() {
       mapController.move(
         LatLng(
-          _latTween.evaluate(animation),
-          _lngTween.evaluate(animation),
+          latTween.evaluate(animation),
+          lngTween.evaluate(animation),
         ),
-        _zoomTween.evaluate(animation),
+        zoomTween.evaluate(animation),
       );
     })
     ..forward();

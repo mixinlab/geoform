@@ -1,15 +1,19 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geoform/flutter_map_fast_markers/flutter_map_fast_markers.dart';
 
-@immutable
+// @immutable
 abstract class GeoformMarkerDatum {
   const GeoformMarkerDatum({
     required this.position,
+    // this.sizeMeters,
   });
 
   final LatLng position;
+  // final double? sizeMeters;
 }
 
 typedef GeoformMarkerBuilder<U extends GeoformMarkerDatum> = FastMarker
@@ -31,6 +35,9 @@ GeoformMarkerBuilder<U> defaultMarkerBuilder<U extends GeoformMarkerDatum>({
   GeoformMarkerDrawerBuilder<U>? customDraw,
   GeoformMarkerTapCallback<U>? onTap,
 }) {
+  const alphaSmall = -2.09;
+  const zoomMaxFactorSmall = 34;
+  const smallPointSize = 3.8;
   return <T>(T datum) {
     final v = datum as GeoformMarkerDatum;
     final width = size.width;
@@ -42,10 +49,12 @@ GeoformMarkerBuilder<U> defaultMarkerBuilder<U extends GeoformMarkerDatum>({
       height: height,
       anchorPos: AnchorPos.align(AnchorAlign.center),
       onDraw: customDraw == null
-          ? (canvas, offset) {
+          ? (canvas, offset, map) {
+              final calculatedSmallPoint = alphaSmall +
+                  (pow(map.zoom, 1.5) / zoomMaxFactorSmall * smallPointSize);
               canvas.drawCircle(
-                offset + Offset(width / 2, height / 2), // The center
-                width / 2, // Radius
+                offset + Offset(calculatedSmallPoint, calculatedSmallPoint),
+                calculatedSmallPoint,
                 redPaint,
               );
             }

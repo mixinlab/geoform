@@ -45,7 +45,7 @@ class GeoformMarkerOverlay extends StatelessWidget {
           constraints,
           point: selectedMarker?.position,
           bounds: mapController?.bounds,
-          offset: const Offset(-11.5, -12),
+          offset: const Offset(-10, -11),
         );
 
         return GestureDetector(
@@ -77,8 +77,8 @@ class GeoformMarkerOverlay extends StatelessWidget {
                             seconds: 1,
                           ),
                           // margin: const EdgeInsets.only(top: 60),
-                          height: 22,
-                          width: 22,
+                          height: 15,
+                          width: 15,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(100),
