@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_map/plugin_api.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geoform/bottom/bottom.dart';
@@ -56,6 +57,7 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
     this.widgetsOnSelectedMarker = const [],
     this.updateThenForm,
     this.polygonsToDraw = const [],
+    this.circlesToDraw = const [],
     this.region,
     this.regionName,
     this.customTileProvider,
@@ -92,6 +94,7 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
   final void Function()? updateThenForm;
 
   final List<FastPolygon> polygonsToDraw;
+  final List<CircleMarker> circlesToDraw;
 
   final DownloadableRegion? region;
   final String? regionName;
@@ -131,6 +134,7 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
         widgetsOnSelectedMarker: widgetsOnSelectedMarker,
         updateThenForm: updateThenForm,
         polygonsToDraw: polygonsToDraw,
+        circlesToDraw: circlesToDraw,
         customTileProvider: customTileProvider,
         urlTemplate:
             urlTemplate ?? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',

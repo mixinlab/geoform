@@ -47,6 +47,7 @@ class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
     this.widgetsOnSelectedMarker = const [],
     this.updateThenForm,
     this.polygonsToDraw = const [],
+    this.circlesToDraw = const [],
     this.customTileProvider,
     this.urlTemplate = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
   }) : super(key: key);
@@ -81,6 +82,7 @@ class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
   final void Function()? updateThenForm;
 
   final List<FastPolygon> polygonsToDraw;
+  final List<CircleMarker> circlesToDraw;
 
   final Widget? customTileProvider;
   final String urlTemplate;
@@ -318,12 +320,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                     children: <Widget>[
                       baseTileProvider(),
                       CircleLayer(
-                        circles: [
-                          CircleMarker(
-                              point: LatLng(-16.40904025, -71.509028501),
-                              radius: 30,
-                              useRadiusInMeter: true),
-                        ],
+                        circles: widget.circlesToDraw,
                       ),
                       FastPolygonLayer(
                         polygonCulling: true,
