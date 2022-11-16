@@ -49,9 +49,11 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
     this.followUserPositionAtStart = true,
     this.registerWithManualSelection = false,
     this.bottomInformationBuilder,
+    this.bottomActionsBuilder,
     this.bottomInterface,
     this.updatePosition,
     this.updateZoom,
+    this.widgetsOnSelectedMarker = const [],
     this.updateThenForm,
     this.polygonsToDraw = const [],
     this.region,
@@ -79,12 +81,14 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
   final double? initialZoom;
 
   final GeoformBottomDisplayBuilder? bottomInformationBuilder;
+  final GeoformBottomActionsBuilder? bottomActionsBuilder;
   final GeoformBottomInterface? bottomInterface;
 
   // Functions to update pos and zoom
   final void Function(LatLng?)? updatePosition;
   final void Function(double?)? updateZoom;
 
+  final List<Widget Function(U?)> widgetsOnSelectedMarker;
   final void Function()? updateThenForm;
 
   final List<FastPolygon> polygonsToDraw;
@@ -120,9 +124,11 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
         registerWithManualSelection: registerWithManualSelection,
         followUserPositionAtStart: followUserPositionAtStart,
         bottomInformationBuilder: bottomInformationBuilder,
+        bottomActionsBuilder: bottomActionsBuilder,
         bottomInterface: bottomInterface,
         updatePosition: updatePosition,
         updateZoom: updateZoom,
+        widgetsOnSelectedMarker: widgetsOnSelectedMarker,
         updateThenForm: updateThenForm,
         polygonsToDraw: polygonsToDraw,
         customTileProvider: customTileProvider,

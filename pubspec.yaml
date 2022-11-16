@@ -1,6 +1,6 @@
 name: geoform
 description: Flutter widget to work with dynamic forms that have a geo-spatial reference asociated with the form. This tool can be used to group and simplify the work with these forms.
-version: 0.0.3-beta.4
+version: 0.0.5
 homepage: https://github.com/mixinlab/geoform
 
 environment:
@@ -9,6 +9,7 @@ environment:
 
 dependencies:
   bloc: ^8.0.3
+  collection: ^1.16.0
   equatable: ^2.0.3
   flutter_bloc: ^8.0.1
   cached_network_image: ^3.2.0
@@ -23,7 +24,9 @@ dependencies:
   google_fonts: ^2.1.0
   latlong2: ^0.8.1
   location: ^4.3.0
+  positioned_tap_detector_2: ^1.0.4
   vector_map_tiles: ^3.1.4
+  vector_tile_renderer: ^3.0.4
 
 dev_dependencies:
   flutter_test:
