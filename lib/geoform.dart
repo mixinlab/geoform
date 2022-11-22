@@ -52,6 +52,7 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
     this.bottomInformationBuilder,
     this.bottomActionsBuilder,
     this.bottomInterface,
+    this.onRegisterPressed,
     this.updatePosition,
     this.updateZoom,
     this.widgetsOnSelectedMarker = const [],
@@ -85,6 +86,7 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
   final GeoformBottomDisplayBuilder? bottomInformationBuilder;
   final GeoformBottomActionsBuilder? bottomActionsBuilder;
   final GeoformBottomInterface? bottomInterface;
+  final void Function(BuildContext, GeoformContext)? onRegisterPressed;
 
   // Functions to update pos and zoom
   final void Function(LatLng?)? updatePosition;
@@ -129,6 +131,7 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
         bottomInformationBuilder: bottomInformationBuilder,
         bottomActionsBuilder: bottomActionsBuilder,
         bottomInterface: bottomInterface,
+        onRegisterPressed: onRegisterPressed,
         updatePosition: updatePosition,
         updateZoom: updateZoom,
         widgetsOnSelectedMarker: widgetsOnSelectedMarker,

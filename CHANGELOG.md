@@ -18,3 +18,7 @@ Implement bottom content and bottom actions
 ## 0.0.6-beta.1
 
 Implement Layer for Circle Markers
+
+## 0.0.6-beta.2
+
+Add custom action for register pressed

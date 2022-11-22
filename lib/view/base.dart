@@ -42,6 +42,7 @@ class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
     this.bottomInformationBuilder,
     this.bottomActionsBuilder,
     this.bottomInterface,
+    this.onRegisterPressed,
     this.updatePosition,
     this.updateZoom,
     this.widgetsOnSelectedMarker = const [],
@@ -73,6 +74,7 @@ class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
   final GeoformBottomDisplayBuilder? bottomInformationBuilder;
   final GeoformBottomActionsBuilder? bottomActionsBuilder;
   final GeoformBottomInterface? bottomInterface;
+  final void Function(BuildContext, GeoformContext)? onRegisterPressed;
 
   // Functions to update pos and zoom
   final void Function(LatLng?)? updatePosition;
@@ -428,24 +430,32 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                                 (widget.registerOnlyWithMarker &&
                                     _selectedMarker != null)
                             ? () {
-                                Navigator.push<void>(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => widget.formBuilder(
-                                      context,
-                                      GeoformContext(
-                                        currentUserPosition:
-                                            _currentLatLng ?? LatLng(0, 0),
-                                        currentMapPosition: _currentMapPosition,
-                                        selectedMarker: _selectedMarker,
-                                        actionText: actionTextController.text,
+                                final geoContext = GeoformContext(
+                                  currentUserPosition:
+                                      _currentLatLng ?? LatLng(0, 0),
+                                  currentMapPosition: _currentMapPosition,
+                                  selectedMarker: _selectedMarker,
+                                  actionText: actionTextController.text,
+                                );
+                                if (widget.onRegisterPressed != null) {
+                                  widget.onRegisterPressed!.call(
+                                    context,
+                                    geoContext,
+                                  );
+                                } else {
+                                  Navigator.push<void>(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => widget.formBuilder(
+                                        context,
+                                        geoContext,
                                       ),
                                     ),
-                                  ),
-                                ).then((value) {
-                                  actionTextController.clear();
-                                  widget.updateThenForm?.call();
-                                });
+                                  ).then((value) {
+                                    actionTextController.clear();
+                                    widget.updateThenForm?.call();
+                                  });
+                                }
                               }
                             : null,
                     onActionPressed: !widget.registerOnlyWithMarker ||
