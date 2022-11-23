@@ -64,6 +64,7 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
     this.customTileProvider,
     this.mapProvider = MapProvider.openStreetMap,
     this.urlTemplate,
+    this.setManualModeOnAction = false,
   }) : super(key: key);
 
   final String title;
@@ -105,6 +106,8 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
   final MapProvider mapProvider;
   final String? urlTemplate;
 
+  final bool setManualModeOnAction;
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -141,6 +144,7 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
         customTileProvider: customTileProvider,
         urlTemplate:
             urlTemplate ?? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        setManualModeOnAction: setManualModeOnAction,
       ),
     );
   }

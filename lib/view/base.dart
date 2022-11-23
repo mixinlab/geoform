@@ -51,6 +51,7 @@ class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
     this.circlesToDraw = const [],
     this.customTileProvider,
     this.urlTemplate = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    this.setManualModeOnAction = false,
   }) : super(key: key);
 
   final GeoformFormBuilder<U> formBuilder;
@@ -88,6 +89,8 @@ class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
 
   final Widget? customTileProvider;
   final String urlTemplate;
+
+  final bool setManualModeOnAction;
 
   @override
   State<GeoformView> createState() => _GeoformViewState<T, U>();
@@ -164,6 +167,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
             _selectedMarker = datum as U;
             widget.onMarkerSelected?.call(datum);
             actionTextController.clear();
+            _isActionActivated = false;
           });
         },
       );
@@ -181,6 +185,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
               _selectedMarker = datum as U;
               widget.onMarkerSelected?.call(datum);
               actionTextController.clear();
+              _isActionActivated = false;
             });
           },
         );
@@ -464,6 +469,11 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                             setState(() {
                               _isActionActivated = !_isActionActivated;
                             });
+                            if (widget.setManualModeOnAction) {
+                              context
+                                  .read<GeoformBloc>()
+                                  .add(ManualChanged(manual: !state.manual));
+                            }
                           }
                         : null,
                     registerOnlyWithMarker: widget.registerOnlyWithMarker,

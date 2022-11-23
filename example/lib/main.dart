@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:geoform/bloc/geoform_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geoform/geoform_markers.dart';
+import 'package:geoform/view/base.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geoform/geoform.dart';
 
@@ -74,6 +77,7 @@ class _MyAppState extends State<MyApp> {
             );
           },
           followUserPositionAtStart: false,
+          setManualModeOnAction: true,
           bottomActionsBuilder: (
             context,
             actionActivated,
