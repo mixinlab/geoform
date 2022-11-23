@@ -1,9 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_map/plugin_api.dart';
-import 'package:geoform/map/form_wrapper.dart';
-import 'package:geoform/map/map.dart';
-import 'package:geoform/user.dart';
+import 'package:geoform/geoform.dart';
 
 void main() {
   runApp(const MyApp());
@@ -36,11 +33,11 @@ class _MyAppState extends State<MyApp> {
     setState(() {});
   }
 
-  final tileLayerOptions = TileLayerOptions(
-    urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    subdomains: ['a', 'b', 'c'],
-    tileProvider: const CachedTileProvider(),
-  );
+  // final tileLayerOptions = TileLayerOptions(
+  //   urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  //   subdomains: ['a', 'b', 'c'],
+  //   tileProvider: const CachedTileProvider(),
+  // );
 
   @override
   Widget build(BuildContext context) {
@@ -49,12 +46,28 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: GeoFormMapWidget(
-          mapLayerOptions: tileLayerOptions,
-          name: "Inspecciones",
-          form: const Text("Form"),
-          formWrapperOptions: FormWrapperOptions(title: "Nuevo Registro"),
-          user: UserInformation(id: "01", name: "User01"),
+        body: Geoform(
+          title: "Geoform",
+          registerWithManualSelection: true,
+          formBuilder: (BuildContext context, GeoformContext geoformContext) {
+            final mapPosition = geoformContext.currentMapPosition;
+            final userPosition = geoformContext.currentUserPosition;
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text("Geoform"),
+              ),
+              body: Center(
+                child: Column(
+                  children: [
+                    Text(
+                        'Map Position: ${mapPosition.latitude}, ${mapPosition.longitude}'),
+                    Text(
+                        'User Position: ${userPosition.latitude}, ${userPosition.longitude}'),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
