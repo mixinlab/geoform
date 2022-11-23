@@ -57,3 +57,29 @@ class _BottomInformationState<U extends GeoformMarkerDatum>
     );
   }
 }
+
+class BottomActions<U extends GeoformMarkerDatum> extends StatelessWidget {
+  const BottomActions({Key? key, this.onRegisterPressed}) : super(key: key);
+
+  final void Function()? onRegisterPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton(
+            onPressed: onRegisterPressed,
+            style: ElevatedButton.styleFrom(
+              animationDuration: const Duration(milliseconds: 300),
+              shadowColor: Colors.transparent,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              textStyle: GoogleFonts.rubik(fontSize: 18),
+            ),
+            child: const Text('Registrar'),
+          ),
+        ),
+      ],
+    );
+  }
+}

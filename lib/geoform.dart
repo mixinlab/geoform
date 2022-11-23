@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_map/plugin_api.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geoform/bottom/bottom.dart';
@@ -49,16 +50,21 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
     this.followUserPositionAtStart = true,
     this.registerWithManualSelection = false,
     this.bottomInformationBuilder,
+    this.bottomActionsBuilder,
     this.bottomInterface,
+    this.onRegisterPressed,
     this.updatePosition,
     this.updateZoom,
+    this.widgetsOnSelectedMarker = const [],
     this.updateThenForm,
     this.polygonsToDraw = const [],
+    this.circlesToDraw = const [],
     this.region,
     this.regionName,
     this.customTileProvider,
     this.mapProvider = MapProvider.openStreetMap,
     this.urlTemplate,
+    this.setManualModeOnAction = false,
   }) : super(key: key);
 
   final String title;
@@ -79,15 +85,19 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
   final double? initialZoom;
 
   final GeoformBottomDisplayBuilder? bottomInformationBuilder;
+  final GeoformBottomActionsBuilder? bottomActionsBuilder;
   final GeoformBottomInterface? bottomInterface;
+  final void Function(BuildContext, GeoformContext)? onRegisterPressed;
 
   // Functions to update pos and zoom
   final void Function(LatLng?)? updatePosition;
   final void Function(double?)? updateZoom;
 
+  final List<Widget Function(U?)> widgetsOnSelectedMarker;
   final void Function()? updateThenForm;
 
   final List<FastPolygon> polygonsToDraw;
+  final List<CircleMarker> circlesToDraw;
 
   final DownloadableRegion? region;
   final String? regionName;
@@ -95,6 +105,8 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
   final Widget? customTileProvider;
   final MapProvider mapProvider;
   final String? urlTemplate;
+
+  final bool setManualModeOnAction;
 
   @override
   Widget build(BuildContext context) {
@@ -120,14 +132,19 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
         registerWithManualSelection: registerWithManualSelection,
         followUserPositionAtStart: followUserPositionAtStart,
         bottomInformationBuilder: bottomInformationBuilder,
+        bottomActionsBuilder: bottomActionsBuilder,
         bottomInterface: bottomInterface,
+        onRegisterPressed: onRegisterPressed,
         updatePosition: updatePosition,
         updateZoom: updateZoom,
+        widgetsOnSelectedMarker: widgetsOnSelectedMarker,
         updateThenForm: updateThenForm,
         polygonsToDraw: polygonsToDraw,
+        circlesToDraw: circlesToDraw,
         customTileProvider: customTileProvider,
         urlTemplate:
             urlTemplate ?? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        setManualModeOnAction: setManualModeOnAction,
       ),
     );
   }

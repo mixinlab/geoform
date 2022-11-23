@@ -40,13 +40,18 @@ class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
     this.followUserPositionAtStart = true,
     this.registerWithManualSelection = false,
     this.bottomInformationBuilder,
+    this.bottomActionsBuilder,
     this.bottomInterface,
+    this.onRegisterPressed,
     this.updatePosition,
     this.updateZoom,
+    this.widgetsOnSelectedMarker = const [],
     this.updateThenForm,
     this.polygonsToDraw = const [],
+    this.circlesToDraw = const [],
     this.customTileProvider,
     this.urlTemplate = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    this.setManualModeOnAction = false,
   }) : super(key: key);
 
   final GeoformFormBuilder<U> formBuilder;
@@ -68,18 +73,24 @@ class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
   final void Function(T record)? onRecordSelected;
 
   final GeoformBottomDisplayBuilder? bottomInformationBuilder;
+  final GeoformBottomActionsBuilder? bottomActionsBuilder;
   final GeoformBottomInterface? bottomInterface;
+  final void Function(BuildContext, GeoformContext)? onRegisterPressed;
 
   // Functions to update pos and zoom
   final void Function(LatLng?)? updatePosition;
   final void Function(double?)? updateZoom;
 
+  final List<Widget Function(U?)> widgetsOnSelectedMarker;
   final void Function()? updateThenForm;
 
   final List<FastPolygon> polygonsToDraw;
+  final List<CircleMarker> circlesToDraw;
 
   final Widget? customTileProvider;
   final String urlTemplate;
+
+  final bool setManualModeOnAction;
 
   @override
   State<GeoformView> createState() => _GeoformViewState<T, U>();
@@ -156,6 +167,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
             _selectedMarker = datum as U;
             widget.onMarkerSelected?.call(datum);
             actionTextController.clear();
+            _isActionActivated = false;
           });
         },
       );
@@ -173,6 +185,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
               _selectedMarker = datum as U;
               widget.onMarkerSelected?.call(datum);
               actionTextController.clear();
+              _isActionActivated = false;
             });
           },
         );
@@ -313,6 +326,9 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                     ),
                     children: <Widget>[
                       baseTileProvider(),
+                      CircleLayer(
+                        circles: widget.circlesToDraw,
+                      ),
                       FastPolygonLayer(
                         polygonCulling: true,
                         polygons: widget.polygonsToDraw,
@@ -321,64 +337,65 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                       MarkerLayer(markers: markers),
                     ],
                   ),
-                  Align(
-                    alignment: Alignment.bottomLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          GeoformActionButton(
-                            icon: const Icon(Icons.ads_click_rounded),
-                            onPressed: () {
-                              context
-                                  .read<GeoformBloc>()
-                                  .add(ManualChanged(manual: !state.manual));
-                            },
-                          )
-                        ],
+                  if (_selectedMarker == null) ...{
+                    if (widget.registerWithManualSelection)
+                      Align(
+                        alignment: Alignment.bottomLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              GeoformActionButton(
+                                icon: const Icon(Icons.ads_click_rounded),
+                                onPressed: () => context
+                                    .read<GeoformBloc>()
+                                    .add(ManualChanged(manual: !state.manual)),
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            GeoformActionButton(
+                              onPressed: () {
+                                animatedMapMove(
+                                  mapController,
+                                  animationController,
+                                  LatLng(
+                                    _userLocation!.latitude!,
+                                    _userLocation!.longitude!,
+                                  ),
+                                  18,
+                                );
+                              },
+                              icon: const Icon(Icons.gps_fixed),
+                            ),
+                            const SizedBox(height: 8),
+                            GeoformActionButton(
+                              onPressed: _markers.isEmpty
+                                  ? null
+                                  : () {
+                                      animatedMapMove(
+                                        mapController,
+                                        animationController,
+                                        getCentroid(markers: _markers),
+                                        13,
+                                      );
+                                    },
+                              icon: const Icon(Icons.circle_outlined),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          GeoformActionButton(
-                            onPressed: () {
-                              animatedMapMove(
-                                mapController,
-                                animationController,
-                                LatLng(
-                                  _userLocation!.latitude!,
-                                  _userLocation!.longitude!,
-                                ),
-                                18,
-                              );
-                            },
-                            icon: const Icon(Icons.gps_fixed),
-                          ),
-                          const SizedBox(height: 8),
-                          GeoformActionButton(
-                            onPressed: _markers.isEmpty
-                                ? null
-                                : () {
-                                    animatedMapMove(
-                                      mapController,
-                                      animationController,
-                                      getCentroid(markers: _markers),
-                                      14,
-                                    );
-                                  },
-                            icon: const Icon(Icons.circle_outlined),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  },
                   if (state.manual)
                     const Center(
                       child: Icon(
@@ -398,6 +415,10 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                               _isActionActivated = false;
                             }),
                           ),
+                  if (_selectedMarker != null) ...{
+                    for (var item in widget.widgetsOnSelectedMarker)
+                      item(_selectedMarker),
+                  },
                 ],
               ),
             ),
@@ -414,24 +435,32 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                                 (widget.registerOnlyWithMarker &&
                                     _selectedMarker != null)
                             ? () {
-                                Navigator.push<void>(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => widget.formBuilder(
-                                      context,
-                                      GeoformContext(
-                                        currentUserPosition:
-                                            _currentLatLng ?? LatLng(0, 0),
-                                        currentMapPosition: _currentMapPosition,
-                                        selectedMarker: _selectedMarker,
-                                        actionText: actionTextController.text,
+                                final geoContext = GeoformContext(
+                                  currentUserPosition:
+                                      _currentLatLng ?? LatLng(0, 0),
+                                  currentMapPosition: _currentMapPosition,
+                                  selectedMarker: _selectedMarker,
+                                  actionText: actionTextController.text,
+                                );
+                                if (widget.onRegisterPressed != null) {
+                                  widget.onRegisterPressed!.call(
+                                    context,
+                                    geoContext,
+                                  );
+                                } else {
+                                  Navigator.push<void>(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => widget.formBuilder(
+                                        context,
+                                        geoContext,
                                       ),
                                     ),
-                                  ),
-                                ).then((value) {
-                                  actionTextController.clear();
-                                  widget.updateThenForm?.call();
-                                });
+                                  ).then((value) {
+                                    actionTextController.clear();
+                                    widget.updateThenForm?.call();
+                                  });
+                                }
                               }
                             : null,
                     onActionPressed: !widget.registerOnlyWithMarker ||
@@ -440,11 +469,17 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                             setState(() {
                               _isActionActivated = !_isActionActivated;
                             });
+                            if (widget.setManualModeOnAction) {
+                              context
+                                  .read<GeoformBloc>()
+                                  .add(ManualChanged(manual: !state.manual));
+                            }
                           }
                         : null,
                     registerOnlyWithMarker: widget.registerOnlyWithMarker,
                     title: widget.title,
                     informationBuilder: widget.bottomInformationBuilder,
+                    actionsBuilder: widget.bottomActionsBuilder,
                   ),
             ),
           ],
@@ -465,7 +500,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
           );
         }
         if (state.mapProvider == MapProvider.vectorProvider) {
-          VectorTileLayer(
+          return VectorTileLayer(
             theme: _mapTheme(context),
             tileProviders: TileProviders(
               {
