@@ -53,7 +53,7 @@ GeoformMarkerBuilder<U> defaultMarkerBuilder<U extends GeoformMarkerDatum>({
               final calculatedSmallPoint = alphaSmall +
                   (pow(map.zoom, 1.5) / zoomMaxFactorSmall * smallPointSize);
               canvas.drawCircle(
-                offset + Offset(calculatedSmallPoint*2, calculatedSmallPoint*2),
+                offset + Offset(calculatedSmallPoint, calculatedSmallPoint),
                 calculatedSmallPoint,
                 redPaint,
               );

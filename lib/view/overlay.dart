@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -16,18 +14,13 @@ class GeoformMarkerOverlay extends StatelessWidget {
   final GeoformMarkerDatum? selectedMarker;
   final MapController? mapController;
   final void Function()? onTapOutside;
+
   Size _getPixelPositionFromLatLngAndBounds(
     BoxConstraints constraints, {
     LatLng? point,
     LatLngBounds? bounds,
     Offset? offset,
   }) {
-    const alphaSmall = -2.09;
-  const zoomMaxFactorSmall = 34;
-  const smallPointSize = 3.8;
-    final calculatedSmallPoint = alphaSmall +
-                  (pow(mapController?.zoom?? 12 , 1.5) / zoomMaxFactorSmall * smallPointSize);
-
     if (point == null || bounds == null) {
       return Size.zero;
     }
@@ -41,7 +34,7 @@ class GeoformMarkerOverlay extends StatelessWidget {
     final pixelX = diffLat / distLat * constraints.maxHeight;
     final pixelY = diffLng / distLng * constraints.maxWidth;
 
-    return Size(pixelY, pixelX) + (offset ?? Offset.zero) + Offset(calculatedSmallPoint*2, calculatedSmallPoint*2);
+    return Size(pixelY, pixelX) + (offset ?? Offset.zero);
   }
 
   @override
