@@ -4,6 +4,7 @@ import 'package:geoform/bloc/geoform_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geoform/geoform_markers.dart';
 import 'package:geoform/view/base.dart';
+import 'package:geoform/view/ui.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geoform/geoform.dart';
 
@@ -46,112 +47,219 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Plugin example app'),
-        ),
-        body: Geoform(
-          title: "Geoform",
-          registerOnlyWithMarker: true,
-          initialPosition: LatLng(-16.40904025, -71.509028501),
-          initialZoom: 18,
-          markers: [MyMarker(position: LatLng(-16.40904025, -71.509028501))],
-          formBuilder: (BuildContext context, GeoformContext geoformContext) {
-            final mapPosition = geoformContext.currentMapPosition;
-            final userPosition = geoformContext.currentUserPosition;
-            return Scaffold(
-              appBar: AppBar(
-                title: const Text("Geoform"),
+    return const MaterialApp(
+      home: Home(),
+    );
+  }
+}
+
+class Home extends StatelessWidget {
+  const Home({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Plugin example app'),
+      ),
+      body: Geoform(
+        title: "Geoform",
+        registerOnlyWithMarker: true,
+        registerWithManualSelection: true,
+        initialPosition: LatLng(-16.40904025, -71.509028501),
+        initialZoom: 18,
+        markers: [MyMarker(position: LatLng(-16.40904025, -71.509028501))],
+        formBuilder: (BuildContext context, GeoformContext geoformContext) {
+          final mapPosition = geoformContext.currentMapPosition;
+          final userPosition = geoformContext.currentUserPosition;
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text("Geoform"),
+            ),
+            body: Center(
+              child: Column(
+                children: [
+                  Text(
+                      'Map Position: ${mapPosition.latitude}, ${mapPosition.longitude}'),
+                  Text(
+                      'User Position: ${userPosition.latitude}, ${userPosition.longitude}'),
+                ],
               ),
-              body: Center(
-                child: Column(
-                  children: [
-                    Text(
-                        'Map Position: ${mapPosition.latitude}, ${mapPosition.longitude}'),
-                    Text(
-                        'User Position: ${userPosition.latitude}, ${userPosition.longitude}'),
-                  ],
-                ),
-              ),
-            );
-          },
-          followUserPositionAtStart: false,
-          setManualModeOnAction: true,
-          bottomActionsBuilder: (
-            context,
-            actionActivated,
-            actionTextController,
-            selectedMarker,
-            onActionPressed,
-            onRegisterPressed,
-          ) {
-            return Column(
-              children: [
-                if (actionActivated) ...[
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    autocorrect: false,
-                    controller: actionTextController,
-                    decoration: InputDecoration(
-                      prefixText: (selectedMarker! as MyMarker)
-                          .position
-                          .latitude
-                          .toString(),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                      ),
-                      labelText: "Editar",
-                      hintStyle: TextStyle(color: Colors.grey[400]),
-                      filled: true,
-                      fillColor: Colors.white70,
-                      border: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(10),
+            ),
+          );
+        },
+        widgetsOnSelectedMarker: [
+          (marker) => Align(
+                alignment: Alignment.bottomLeft,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      GeoformActionButton(
+                        icon: const Icon(Icons.map_outlined),
+                        onPressed: () => showDialog(
+                          context: context,
+                          builder: (_) {
+                            return AlertDialog(
+                              title: const Text('Leyenda'),
+                              content: Text("data"),
+                              actions: <Widget>[
+                                TextButton(
+                                  onPressed: () => Navigator.pop<void>(context),
+                                  child: const Text(
+                                    'Ok',
+                                    style: TextStyle(
+                                      fontSize: 18.0,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ),
-                      floatingLabelBehavior: FloatingLabelBehavior.always,
-                      errorMaxLines: 2,
+                    ],
+                  ),
+                ),
+              ),
+        ],
+        // additionalActionWidgets: [
+        //   Align(
+        //     alignment: Alignment.bottomLeft,
+        //     child: Padding(
+        //       padding: const EdgeInsets.all(8),
+        //       child: Column(
+        //         mainAxisAlignment: MainAxisAlignment.end,
+        //         children: [
+        //           GeoformActionButton(
+        //             icon: const Icon(Icons.map_outlined),
+        //             onPressed: () => showDialog(
+        //               context: context,
+        //               builder: (_) {
+        //                 return AlertDialog(
+        //                   title: const Text('Leyenda'),
+        //                   content: SingleChildScrollView(
+        //                     child: Column(
+        //                       children: [
+        //                         Row(
+        //                           children: [
+        //                             Container(
+        //                               height: 20,
+        //                               width: 20,
+        //                               margin: const EdgeInsets.only(right: 10),
+        //                               decoration: const BoxDecoration(
+        //                                   color: Colors.orange,
+        //                                   shape: BoxShape.circle),
+        //                             ),
+        //                             const Text(
+        //                               'Marcador',
+        //                               style: TextStyle(
+        //                                 fontStyle: FontStyle.italic,
+        //                               ),
+        //                             )
+        //                           ],
+        //                         ),
+        //                       ],
+        //                     ),
+        //                   ),
+        //                   actions: <Widget>[
+        //                     TextButton(
+        //                       onPressed: () => Navigator.pop<void>(context),
+        //                       child: const Text(
+        //                         'Ok',
+        //                         style: TextStyle(
+        //                           fontSize: 18.0,
+        //                           fontWeight: FontWeight.w500,
+        //                         ),
+        //                       ),
+        //                     ),
+        //                   ],
+        //                 );
+        //               },
+        //             ),
+        //           ),
+        //         ],
+        //       ),
+        //     ),
+        //   ),
+        // ],
+        followUserPositionAtStart: false,
+        setManualModeOnAction: true,
+        bottomActionsBuilder: (
+          context,
+          actionActivated,
+          actionTextController,
+          selectedMarker,
+          onActionPressed,
+          onRegisterPressed,
+        ) {
+          return Column(
+            children: [
+              if (actionActivated) ...[
+                const SizedBox(height: 16),
+                TextFormField(
+                  autocorrect: false,
+                  controller: actionTextController,
+                  decoration: InputDecoration(
+                    prefixText: (selectedMarker! as MyMarker)
+                        .position
+                        .latitude
+                        .toString(),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                    ),
+                    labelText: "Editar",
+                    hintStyle: TextStyle(color: Colors.grey[400]),
+                    filled: true,
+                    fillColor: Colors.white70,
+                    border: const OutlineInputBorder(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(10),
+                      ),
+                    ),
+                    floatingLabelBehavior: FloatingLabelBehavior.always,
+                    errorMaxLines: 2,
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: TextButton(
+                      onPressed: onActionPressed,
+                      style: ElevatedButton.styleFrom(
+                        animationDuration: const Duration(milliseconds: 300),
+                        shadowColor: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 16,
+                        ),
+                        textStyle: const TextStyle(fontSize: 18),
+                      ),
+                      child: Text(actionActivated ? 'Cancelar' : 'Adicional'),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: onRegisterPressed,
+                      style: ElevatedButton.styleFrom(
+                        animationDuration: const Duration(milliseconds: 300),
+                        shadowColor: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        textStyle: const TextStyle(fontSize: 18),
+                      ),
+                      child: const Text('Guardar'),
+                    ),
+                  ),
                 ],
-                Row(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: TextButton(
-                        onPressed: onActionPressed,
-                        style: ElevatedButton.styleFrom(
-                          animationDuration: const Duration(milliseconds: 300),
-                          shadowColor: Colors.transparent,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 16,
-                            horizontal: 16,
-                          ),
-                          textStyle: const TextStyle(fontSize: 18),
-                        ),
-                        child: Text(actionActivated ? 'Cancelar' : 'Adicional'),
-                      ),
-                    ),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: onRegisterPressed,
-                        style: ElevatedButton.styleFrom(
-                          animationDuration: const Duration(milliseconds: 300),
-                          shadowColor: Colors.transparent,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          textStyle: const TextStyle(fontSize: 18),
-                        ),
-                        child: const Text('Guardar'),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            );
-          },
-        ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

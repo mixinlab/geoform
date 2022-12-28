@@ -1,6 +1,6 @@
 ## 0.0.1
 
-* TODO: Describe initial release.
+- TODO: Describe initial release.
 
 ## 0.0.3-beta.4
 
@@ -30,3 +30,11 @@ Add manual mode on action pressed
 ## 0.0.6-beta.4
 
 Fix: Deactivate action on new marker selected
+
+## 0.0.6-beta.5
+
+Feat: Add custom actions buttons
+
+## 0.0.6-beta.6
+
+Fix: initial position on manual selection

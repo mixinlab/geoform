@@ -46,6 +46,7 @@ class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
     this.updatePosition,
     this.updateZoom,
     this.widgetsOnSelectedMarker = const [],
+    this.additionalActionWidgets = const [],
     this.updateThenForm,
     this.polygonsToDraw = const [],
     this.circlesToDraw = const [],
@@ -82,6 +83,7 @@ class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
   final void Function(double?)? updateZoom;
 
   final List<Widget Function(U?)> widgetsOnSelectedMarker;
+  final List<Widget> additionalActionWidgets;
   final void Function()? updateThenForm;
 
   final List<FastPolygon> polygonsToDraw;
@@ -133,6 +135,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
     })
       ..pause();
 
+    _currentMapPosition = widget.initialPosition ?? LatLng(50, 50);
     animationController =
         AnimationController(duration: const Duration(seconds: 1), vsync: this);
     setState(() {
@@ -395,6 +398,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                         ),
                       ),
                     ),
+                    for (var item in widget.additionalActionWidgets) item,
                   },
                   if (state.manual)
                     const Center(

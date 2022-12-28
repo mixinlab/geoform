@@ -56,6 +56,7 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
     this.updatePosition,
     this.updateZoom,
     this.widgetsOnSelectedMarker = const [],
+    this.additionalActionWidgets = const [],
     this.updateThenForm,
     this.polygonsToDraw = const [],
     this.circlesToDraw = const [],
@@ -94,6 +95,7 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
   final void Function(double?)? updateZoom;
 
   final List<Widget Function(U?)> widgetsOnSelectedMarker;
+  final List<Widget> additionalActionWidgets;
   final void Function()? updateThenForm;
 
   final List<FastPolygon> polygonsToDraw;
@@ -138,6 +140,7 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
         updatePosition: updatePosition,
         updateZoom: updateZoom,
         widgetsOnSelectedMarker: widgetsOnSelectedMarker,
+        additionalActionWidgets: additionalActionWidgets,
         updateThenForm: updateThenForm,
         polygonsToDraw: polygonsToDraw,
         circlesToDraw: circlesToDraw,
