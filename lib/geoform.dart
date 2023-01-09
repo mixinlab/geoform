@@ -33,7 +33,7 @@ typedef GeoformFormBuilder<U extends GeoformMarkerDatum> = Widget Function(
   GeoformContext geoformContext,
 );
 
-class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
+class Geoform<T, U extends GeoformMarkerDatum> extends StatefulWidget {
   const Geoform({
     Key? key,
     required this.formBuilder,
@@ -95,7 +95,13 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
   final void Function(double?)? updateZoom;
 
   final List<Widget Function(U?)> widgetsOnSelectedMarker;
-  final List<Widget> additionalActionWidgets;
+  final List<
+      Widget Function(
+    GeoformState,
+    void Function(U),
+    void Function(LatLng, double),
+    List<U>?,
+  )> additionalActionWidgets;
   final void Function()? updateThenForm;
 
   final List<FastPolygon> polygonsToDraw;
@@ -111,43 +117,54 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatelessWidget {
   final bool setManualModeOnAction;
 
   @override
+  State<Geoform<T, U>> createState() => _GeoformState<T, U>();
+}
+
+class _GeoformState<T, U extends GeoformMarkerDatum>
+    extends State<Geoform<T, U>> with SingleTickerProviderStateMixin {
+  @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => GeoformBloc(
-        regionName: regionName,
-        mapProvider: mapProvider,
+        regionName: widget.regionName,
+        mapProvider: widget.mapProvider,
+        initialPosition: widget.initialPosition,
+        animationController: AnimationController(
+          duration: const Duration(seconds: 1),
+          vsync: this,
+        ),
       )..add(
-          AddRegion(region: region),
+          AddRegion(region: widget.region),
         ),
       child: GeoformView<T, U>(
-        formBuilder: formBuilder,
-        title: title,
-        markerBuilder: markerBuilder,
-        records: records,
-        markers: markers,
-        initialPosition: initialPosition,
-        initialZoom: initialZoom,
-        markerDrawer: markerDrawerBuilder,
-        onRecordSelected: onRecordSelected,
-        onMarkerSelected: onMarkerSelected,
-        registerOnlyWithMarker: registerOnlyWithMarker,
-        registerWithManualSelection: registerWithManualSelection,
-        followUserPositionAtStart: followUserPositionAtStart,
-        bottomInformationBuilder: bottomInformationBuilder,
-        bottomActionsBuilder: bottomActionsBuilder,
-        bottomInterface: bottomInterface,
-        onRegisterPressed: onRegisterPressed,
-        updatePosition: updatePosition,
-        updateZoom: updateZoom,
-        widgetsOnSelectedMarker: widgetsOnSelectedMarker,
-        additionalActionWidgets: additionalActionWidgets,
-        updateThenForm: updateThenForm,
-        polygonsToDraw: polygonsToDraw,
-        circlesToDraw: circlesToDraw,
-        customTileProvider: customTileProvider,
-        urlTemplate:
-            urlTemplate ?? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-        setManualModeOnAction: setManualModeOnAction,
+        formBuilder: widget.formBuilder,
+        title: widget.title,
+        markerBuilder: widget.markerBuilder,
+        records: widget.records,
+        markers: widget.markers,
+        initialPosition: widget.initialPosition,
+        initialZoom: widget.initialZoom,
+        markerDrawer: widget.markerDrawerBuilder,
+        onRecordSelected: widget.onRecordSelected,
+        onMarkerSelected: widget.onMarkerSelected,
+        registerOnlyWithMarker: widget.registerOnlyWithMarker,
+        registerWithManualSelection: widget.registerWithManualSelection,
+        followUserPositionAtStart: widget.followUserPositionAtStart,
+        bottomInformationBuilder: widget.bottomInformationBuilder,
+        bottomActionsBuilder: widget.bottomActionsBuilder,
+        bottomInterface: widget.bottomInterface,
+        onRegisterPressed: widget.onRegisterPressed,
+        updatePosition: widget.updatePosition,
+        updateZoom: widget.updateZoom,
+        widgetsOnSelectedMarker: widget.widgetsOnSelectedMarker,
+        additionalActionWidgets: widget.additionalActionWidgets,
+        updateThenForm: widget.updateThenForm,
+        polygonsToDraw: widget.polygonsToDraw,
+        circlesToDraw: widget.circlesToDraw,
+        customTileProvider: widget.customTileProvider,
+        urlTemplate: widget.urlTemplate ??
+            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        setManualModeOnAction: widget.setManualModeOnAction,
       ),
     );
   }

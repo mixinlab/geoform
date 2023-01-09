@@ -38,3 +38,16 @@ Feat: Add custom actions buttons
 ## 0.0.6-beta.6
 
 Fix: initial position on manual selection
+
+## 0.0.7
+
+- Move parameters to geoform bloc
+- Add parameters to additional widgets
+
+## 0.0.8-beta.1
+
+- Add parameters to additional widgets
+
+## 0.0.8-beta.2
+
+- Fix: use extended geoform markers class in geoform view

@@ -1,10 +1,13 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
+import 'package:geoform/flutter_map_fast_markers/flutter_map_fast_markers.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geoform/geoform.dart';
-import 'package:geoform/geoform_markers.dart';
 import 'package:positioned_tap_detector_2/positioned_tap_detector_2.dart';
 
 part 'geoform_event.dart';
@@ -14,14 +17,52 @@ class GeoformBloc extends Bloc<GeoformEvent, GeoformState> {
   GeoformBloc({
     String? regionName,
     MapProvider? mapProvider,
+    LatLng? initialPosition,
+    required AnimationController animationController,
   }) : super(GeoformState.initial(
-          regionName: regionName,
-          mapProvider: mapProvider,
-        )) {
+            regionName: regionName,
+            mapProvider: mapProvider,
+            initialPosition: initialPosition,
+            animationController: animationController)) {
     on<ManualChanged>(_onManualChanged);
     on<GeoformContextUpdated>(_onGeoformContextUpdated);
     on<GeoformOnTap>(_onGeoformOnTap);
     on<AddRegion>(_onAddRegion);
+    on<ChangeMapPosition>(_onChangeMapPosition);
+    on<ChangeMarkers>(_onChangeMarkers);
+    on<AddAnimation>(_onAddAnimation);
+    on<ChangeActivateAction>(_onActivateAction);
+
+    _mapEventSubscription = state.mapController.mapEventStream.listen(
+      (event) => add(
+        ChangeMapPosition(
+          position: LatLng(
+            event.center.latitude,
+            event.center.longitude,
+          ),
+        ),
+      ),
+    )..pause();
+  }
+
+  late StreamSubscription<MapEvent> _mapEventSubscription;
+
+  void _onChangeMapPosition(
+      ChangeMapPosition event, Emitter<GeoformState> emit) {
+    emit(state.copyWith(currentMapPosition: event.position));
+  }
+
+  void _onChangeMarkers(ChangeMarkers event, Emitter<GeoformState> emit) {
+    emit(state.copyWith(markers: event.markers));
+  }
+
+  void _onAddAnimation(AddAnimation event, Emitter<GeoformState> emit) {
+    emit(state.copyWith(animationController: event.controller));
+  }
+
+  void _onActivateAction(
+      ChangeActivateAction event, Emitter<GeoformState> emit) {
+    emit(state.copyWith(isActionActivated: event.isActivated));
   }
 
   Future<void> _onAddRegion(
@@ -57,6 +98,11 @@ class GeoformBloc extends Bloc<GeoformEvent, GeoformState> {
     Emitter<GeoformState> emit,
   ) async {
     emit(state.copyWith(manual: event.manual));
+    if (event.manual) {
+      _mapEventSubscription.resume();
+    } else {
+      _mapEventSubscription.pause();
+    }
   }
 
   Future<void> _onGeoformContextUpdated(
@@ -71,5 +117,12 @@ class GeoformBloc extends Bloc<GeoformEvent, GeoformState> {
     Emitter<GeoformState> emit,
   ) async {
     emit(state.copyWith(tapPosition: event.tapPosition));
+  }
+
+  @override
+  Future<void> close() {
+    _mapEventSubscription.cancel();
+    state.animationController.dispose();
+    return super.close();
   }
 }

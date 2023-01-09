@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geoform/bloc/geoform_bloc.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geoform/geoform_markers.dart';
-import 'package:geoform/view/base.dart';
 import 'package:geoform/view/ui.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geoform/geoform.dart';
@@ -102,8 +100,8 @@ class Home extends StatelessWidget {
                           context: context,
                           builder: (_) {
                             return AlertDialog(
-                              title: const Text('Leyenda'),
-                              content: Text("data"),
+                              title: const Text('Information'),
+                              content: const Text("Data"),
                               actions: <Widget>[
                                 TextButton(
                                   onPressed: () => Navigator.pop<void>(context),
@@ -125,66 +123,57 @@ class Home extends StatelessWidget {
                 ),
               ),
         ],
-        // additionalActionWidgets: [
-        //   Align(
-        //     alignment: Alignment.bottomLeft,
-        //     child: Padding(
-        //       padding: const EdgeInsets.all(8),
-        //       child: Column(
-        //         mainAxisAlignment: MainAxisAlignment.end,
-        //         children: [
-        //           GeoformActionButton(
-        //             icon: const Icon(Icons.map_outlined),
-        //             onPressed: () => showDialog(
-        //               context: context,
-        //               builder: (_) {
-        //                 return AlertDialog(
-        //                   title: const Text('Leyenda'),
-        //                   content: SingleChildScrollView(
-        //                     child: Column(
-        //                       children: [
-        //                         Row(
-        //                           children: [
-        //                             Container(
-        //                               height: 20,
-        //                               width: 20,
-        //                               margin: const EdgeInsets.only(right: 10),
-        //                               decoration: const BoxDecoration(
-        //                                   color: Colors.orange,
-        //                                   shape: BoxShape.circle),
-        //                             ),
-        //                             const Text(
-        //                               'Marcador',
-        //                               style: TextStyle(
-        //                                 fontStyle: FontStyle.italic,
-        //                               ),
-        //                             )
-        //                           ],
-        //                         ),
-        //                       ],
-        //                     ),
-        //                   ),
-        //                   actions: <Widget>[
-        //                     TextButton(
-        //                       onPressed: () => Navigator.pop<void>(context),
-        //                       child: const Text(
-        //                         'Ok',
-        //                         style: TextStyle(
-        //                           fontSize: 18.0,
-        //                           fontWeight: FontWeight.w500,
-        //                         ),
-        //                       ),
-        //                     ),
-        //                   ],
-        //                 );
-        //               },
-        //             ),
-        //           ),
-        //         ],
-        //       ),
-        //     ),
-        //   ),
-        // ],
+        additionalActionWidgets: [
+          (GeoformState state, void Function(MyMarker) selectDatum,
+                  void Function(LatLng, double) move, _) =>
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      GeoformActionButton(
+                        icon: const Icon(Icons.map_outlined),
+                        onPressed: () => showDialog(
+                          context: context,
+                          builder: (_) {
+                            return AlertDialog(
+                              title: const Text('Additional Function'),
+                              content: const Text("Go to point"),
+                              actions: <Widget>[
+                                TextButton(
+                                  onPressed: () async {
+                                    final mark = MyMarker(
+                                      position: LatLng(
+                                        -16.40904025,
+                                        -71.509028501,
+                                      ),
+                                    );
+                                    move(mark.position, 18);
+                                    await Future.delayed(
+                                        const Duration(seconds: 1));
+                                    selectDatum(mark);
+                                    Navigator.pop<void>(context);
+                                  },
+                                  child: const Text(
+                                    'Ok',
+                                    style: TextStyle(
+                                      fontSize: 18.0,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+        ],
         followUserPositionAtStart: false,
         setManualModeOnAction: true,
         bottomActionsBuilder: (
