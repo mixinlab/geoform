@@ -94,9 +94,10 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatefulWidget {
   final void Function(LatLng?)? updatePosition;
   final void Function(double?)? updateZoom;
 
-  final List<Widget Function(U?)> widgetsOnSelectedMarker;
+  final List<Widget Function(BuildContext, U?)> widgetsOnSelectedMarker;
   final List<
       Widget Function(
+    BuildContext,
     GeoformState,
     void Function(U),
     void Function(LatLng, double),

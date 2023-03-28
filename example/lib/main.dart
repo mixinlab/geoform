@@ -87,7 +87,7 @@ class Home extends StatelessWidget {
           );
         },
         widgetsOnSelectedMarker: [
-          (marker) => Align(
+          (_, marker) => Align(
                 alignment: Alignment.bottomLeft,
                 child: Padding(
                   padding: const EdgeInsets.all(8),
@@ -124,8 +124,8 @@ class Home extends StatelessWidget {
               ),
         ],
         additionalActionWidgets: [
-          (GeoformState state, void Function(MyMarker) selectDatum,
-                  void Function(LatLng, double) move, _) =>
+          (_, GeoformState state, void Function(MyMarker) selectDatum,
+                  void Function(LatLng, double) move, __) =>
               Align(
                 alignment: Alignment.bottomLeft,
                 child: Padding(

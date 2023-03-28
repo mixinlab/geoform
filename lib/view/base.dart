@@ -81,9 +81,10 @@ class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
   final void Function(LatLng?)? updatePosition;
   final void Function(double?)? updateZoom;
 
-  final List<Widget Function(U?)> widgetsOnSelectedMarker;
+  final List<Widget Function(BuildContext, U?)> widgetsOnSelectedMarker;
   final List<
       Widget Function(
+    BuildContext,
     GeoformState,
     void Function(U),
     void Function(LatLng, double),
@@ -396,6 +397,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                     ),
                     for (var item in widget.additionalActionWidgets)
                       item(
+                        context,
                         state,
                         _selectDatum,
                         (p0, p1) => animatedMapMove(state.mapController,
@@ -428,7 +430,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                           ),
                   if (_selectedMarker != null) ...{
                     for (var item in widget.widgetsOnSelectedMarker)
-                      item(_selectedMarker),
+                      item(context, _selectedMarker),
                   },
                 ],
               ),
