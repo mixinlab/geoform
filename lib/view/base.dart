@@ -8,7 +8,7 @@ import 'package:flutter_map/plugin_api.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:location/location.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:geoform/animation/animation.dart';
 import 'package:geoform/animation/centroid.dart';
 import 'package:geoform/bottom/bottom.dart';
@@ -114,7 +114,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
 
   // bool _isActionActivated = false;
 
-  LocationData? _userLocation;
+  Position? _userLocation;
   String? serviceError;
 
   U? _selectedMarker;
@@ -197,18 +197,18 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
   }
 
   Future<void> initLocationService() async {
-    LocationData locationData;
-    final locationService = Location();
+    Position locationData;
 
     try {
-      final serviceEnabled = await locationService.serviceEnabled();
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
 
       if (serviceEnabled) {
-        final permission = await locationService.requestPermission();
-        final permission0 = permission == PermissionStatus.granted;
+        final permission = await Geolocator.checkPermission();
+        final permission0 = permission == LocationPermission.always ||
+            permission == LocationPermission.whileInUse;
 
         if (permission0) {
-          locationData = await locationService.getLocation();
+          locationData = await Geolocator.getCurrentPosition();
           setState(() {
             _userLocation = locationData;
           });
@@ -225,7 +225,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
           }
 
           _locationSubscription =
-              locationService.onLocationChanged.listen((locationData) async {
+              Geolocator.getPositionStream().listen((locationData) async {
             if (mounted) {
               setState(() {
                 _userLocation = locationData;
@@ -234,8 +234,9 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
           });
         }
       } else {
-        final serviceRequestResult = await locationService.requestService();
-        if (serviceRequestResult) {
+        final serviceRequestResult = await Geolocator.requestPermission();
+        if (serviceRequestResult == LocationPermission.always ||
+            serviceRequestResult == LocationPermission.whileInUse) {
           await initLocationService();
           return;
         }
@@ -255,8 +256,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
     LatLng? currentLatLng;
 
     if (_userLocation != null) {
-      currentLatLng =
-          LatLng(_userLocation!.latitude!, _userLocation!.longitude!);
+      currentLatLng = LatLng(_userLocation!.latitude, _userLocation!.longitude);
     }
 
     final markers = <Marker>[
@@ -366,8 +366,8 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                                   state.mapController,
                                   state.animationController,
                                   LatLng(
-                                    _userLocation!.latitude!,
-                                    _userLocation!.longitude!,
+                                    _userLocation!.latitude,
+                                    _userLocation!.longitude,
                                   ),
                                   18,
                                 );
