@@ -19,8 +19,6 @@ import 'package:geoform/bloc/geoform_bloc.dart';
 import 'package:geoform/geoform_markers.dart';
 import 'package:geoform/view/overlay.dart';
 import 'package:geoform/view/ui.dart';
-import 'package:vector_map_tiles/vector_map_tiles.dart';
-import 'package:vector_tile_renderer/vector_tile_renderer.dart' as vectortile;
 
 class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
   const GeoformView({
@@ -200,17 +198,17 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
 
   Future<void> initLocationService() async {
     LocationData locationData;
-    final _locationService = Location();
+    final locationService = Location();
 
     try {
-      final serviceEnabled = await _locationService.serviceEnabled();
+      final serviceEnabled = await locationService.serviceEnabled();
 
       if (serviceEnabled) {
-        final permission = await _locationService.requestPermission();
-        final _permission = permission == PermissionStatus.granted;
+        final permission = await locationService.requestPermission();
+        final permission0 = permission == PermissionStatus.granted;
 
-        if (_permission) {
-          locationData = await _locationService.getLocation();
+        if (permission0) {
+          locationData = await locationService.getLocation();
           setState(() {
             _userLocation = locationData;
           });
@@ -227,7 +225,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
           }
 
           _locationSubscription =
-              _locationService.onLocationChanged.listen((locationData) async {
+              locationService.onLocationChanged.listen((locationData) async {
             if (mounted) {
               setState(() {
                 _userLocation = locationData;
@@ -236,7 +234,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
           });
         }
       } else {
-        final serviceRequestResult = await _locationService.requestService();
+        final serviceRequestResult = await locationService.requestService();
         if (serviceRequestResult) {
           await initLocationService();
           return;
@@ -254,10 +252,10 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
 
   @override
   Widget build(BuildContext context) {
-    LatLng? _currentLatLng;
+    LatLng? currentLatLng;
 
     if (_userLocation != null) {
-      _currentLatLng =
+      currentLatLng =
           LatLng(_userLocation!.latitude!, _userLocation!.longitude!);
     }
 
@@ -265,7 +263,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
       Marker(
         width: 18,
         height: 18,
-        point: _currentLatLng ?? LatLng(0, 0),
+        point: currentLatLng ?? LatLng(0, 0),
         builder: (ctx) => const DefaultLocationMarker(),
       ),
     ];
@@ -288,7 +286,6 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
             ),
           );
         }
-        final temp = widget.additionalActionWidgets;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -440,7 +437,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
               child: widget.bottomInterface ??
                   GeoformBottomInterface<U>(
                     actionActivated: state.isActionActivated,
-                    currentPosition: _currentLatLng ?? LatLng(0, 0),
+                    currentPosition: currentLatLng ?? LatLng(0, 0),
                     selectedMarker: _selectedMarker,
                     actionTextController: actionTextController,
                     onRegisterPressed:
@@ -450,7 +447,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                             ? () {
                                 final geoContext = GeoformContext(
                                   currentUserPosition:
-                                      _currentLatLng ?? LatLng(0, 0),
+                                      currentLatLng ?? LatLng(0, 0),
                                   currentMapPosition: state.currentMapPosition!,
                                   selectedMarker: _selectedMarker,
                                   actionText: actionTextController.text,
@@ -517,36 +514,36 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
             urlTemplate: widget.urlTemplate,
           );
         }
-        if (state.mapProvider == MapProvider.vectorProvider) {
-          return VectorTileLayer(
-            theme: _mapTheme(context),
-            tileProviders: TileProviders(
-              {
-                'openmaptiles': _cachingTileProvider(widget.urlTemplate),
-              },
-            ),
-          );
-        }
+        // if (state.mapProvider == MapProvider.vectorProvider) {
+        //   return VectorTileLayer(
+        //     theme: _mapTheme(context),
+        //     tileProviders: TileProviders(
+        //       {
+        //         'openmaptiles': _cachingTileProvider(widget.urlTemplate),
+        //       },
+        //     ),
+        //   );
+        // }
         return widget.customTileProvider ?? Container();
       },
     );
   }
 }
 
-VectorTileProvider _cachingTileProvider(String urlTemplate) {
-  return MemoryCacheVectorTileProvider(
-      delegate: NetworkVectorTileProvider(
-          urlTemplate: urlTemplate,
-          // this is the maximum zoom of the provider, not the
-          // maximum of the map. vector tiles are rendered
-          // to larger sizes to support higher zoom levels
-          maximumZoom: 14),
-      maxSizeBytes: 1024 * 1024 * 2);
-}
+// VectorTileProvider _cachingTileProvider(String urlTemplate) {
+//   return MemoryCacheVectorTileProvider(
+//       delegate: NetworkVectorTileProvider(
+//           urlTemplate: urlTemplate,
+//           // this is the maximum zoom of the provider, not the
+//           // maximum of the map. vector tiles are rendered
+//           // to larger sizes to support higher zoom levels
+//           maximumZoom: 14),
+//       maxSizeBytes: 1024 * 1024 * 2);
+// }
 
-vectortile.Theme _mapTheme(BuildContext context) {
-  // maps are rendered using themes
-  // to provide a dark theme do something like this:
-  // if (MediaQuery.of(context).platformBrightness == Brightness.dark) return myDarkTheme();
-  return vectortile.ProvidedThemes.lightTheme();
-}
+// vectortile.Theme _mapTheme(BuildContext context) {
+//   // maps are rendered using themes
+//   // to provide a dark theme do something like this:
+//   // if (MediaQuery.of(context).platformBrightness == Brightness.dark) return myDarkTheme();
+//   return vectortile.ProvidedThemes.lightTheme();
+// }

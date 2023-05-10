@@ -41,7 +41,7 @@ class GeoformMarkerOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final _highlightPosition = _getPixelPositionFromLatLngAndBounds(
+        final highlightPosition = _getPixelPositionFromLatLngAndBounds(
           constraints,
           point: selectedMarker?.position,
           bounds: mapController?.bounds,
@@ -69,8 +69,8 @@ class GeoformMarkerOverlay extends StatelessWidget {
                         ),
                       ),
                       Positioned(
-                        top: _highlightPosition.height,
-                        left: _highlightPosition.width,
+                        top: highlightPosition.height,
+                        left: highlightPosition.width,
                         // alignment: Alignment.topCenter,
                         child: AnimatedContainer(
                           duration: const Duration(

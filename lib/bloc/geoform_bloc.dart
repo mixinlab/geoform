@@ -1,14 +1,13 @@
 import 'dart:async';
 
-import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:geoform/flutter_map_fast_markers/flutter_map_fast_markers.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geoform/geoform.dart';
-import 'package:positioned_tap_detector_2/positioned_tap_detector_2.dart';
 
 part 'geoform_event.dart';
 part 'geoform_state.dart';
@@ -72,13 +71,13 @@ class GeoformBloc extends Bloc<GeoformEvent, GeoformState> {
     if (event.region == null) {
       return;
     }
-    final StoreDirectory _instance = FMTC.instance(state.regionName ?? '');
-    if (!_instance.manage.ready) {
-      await _instance.manage.createAsync();
+    final StoreDirectory instance = FMTC.instance(state.regionName ?? '');
+    if (!instance.manage.ready) {
+      await instance.manage.createAsync();
       emit(state.copyWith(isDownloading: true));
       final downloadableRegion = event.region!;
       final download =
-          _instance.download.startForeground(region: downloadableRegion);
+          instance.download.startForeground(region: downloadableRegion);
       debugPrint('Download start');
       await emit.forEach(download, onData: (DownloadProgress downloadProgress) {
         debugPrint(

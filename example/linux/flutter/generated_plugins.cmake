@@ -4,7 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   geoform
-  url_launcher_linux
+  isar_flutter_libs
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
