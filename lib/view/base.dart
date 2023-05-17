@@ -201,11 +201,13 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
 
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      var askPermission = !serviceEnabled;
 
       if (serviceEnabled) {
         final permission = await Geolocator.checkPermission();
         final permission0 = permission == LocationPermission.always ||
             permission == LocationPermission.whileInUse;
+        askPermission = !permission0;
 
         if (permission0) {
           locationData = await Geolocator.getCurrentPosition();
@@ -233,7 +235,8 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
             }
           });
         }
-      } else {
+      }
+      if (askPermission) {
         final serviceRequestResult = await Geolocator.requestPermission();
         if (serviceRequestResult == LocationPermission.always ||
             serviceRequestResult == LocationPermission.whileInUse) {
