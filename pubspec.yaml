@@ -4,7 +4,7 @@ version: 0.0.8-beta.2
 homepage: https://github.com/mixinlab/geoform
 
 environment:
-  sdk: '>=2.19.6 <3.0.0'
+  sdk: ">=2.19.6 <4.0.0"
 
 dependencies:
   flutter_bloc: ^8.1.2
@@ -14,6 +14,8 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_map: ^4.0.0
+  vector_map_tiles: ^4.0.0
+  vector_tile_renderer: ^4.0.0
   flutter_map_location_marker: ^6.0.0
   flutter_map_tile_caching: ^8.0.0
   flutter_web_plugins:

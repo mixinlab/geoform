@@ -19,6 +19,8 @@ import 'package:geoform/bloc/geoform_bloc.dart';
 import 'package:geoform/geoform_markers.dart';
 import 'package:geoform/view/overlay.dart';
 import 'package:geoform/view/ui.dart';
+import 'package:vector_map_tiles/vector_map_tiles.dart';
+import 'package:vector_tile_renderer/vector_tile_renderer.dart' as vectortile;
 
 class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
   const GeoformView({
@@ -82,12 +84,12 @@ class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
   final List<Widget Function(BuildContext, U?)> widgetsOnSelectedMarker;
   final List<
       Widget Function(
-    BuildContext,
-    GeoformState,
-    void Function(U),
-    void Function(LatLng, double),
-    List<U>?,
-  )> additionalActionWidgets;
+        BuildContext,
+        GeoformState,
+        void Function(U),
+        void Function(LatLng, double),
+        List<U>?,
+      )> additionalActionWidgets;
   final void Function()? updateThenForm;
 
   final List<FastPolygon> polygonsToDraw;
@@ -517,36 +519,36 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
             urlTemplate: widget.urlTemplate,
           );
         }
-        // if (state.mapProvider == MapProvider.vectorProvider) {
-        //   return VectorTileLayer(
-        //     theme: _mapTheme(context),
-        //     tileProviders: TileProviders(
-        //       {
-        //         'openmaptiles': _cachingTileProvider(widget.urlTemplate),
-        //       },
-        //     ),
-        //   );
-        // }
+        if (state.mapProvider == MapProvider.vectorProvider) {
+          return VectorTileLayer(
+            theme: _mapTheme(context),
+            tileProviders: TileProviders(
+              {
+                'openmaptiles': _cachingTileProvider(widget.urlTemplate),
+              },
+            ),
+          );
+        }
         return widget.customTileProvider ?? Container();
       },
     );
   }
 }
 
-// VectorTileProvider _cachingTileProvider(String urlTemplate) {
-//   return MemoryCacheVectorTileProvider(
-//       delegate: NetworkVectorTileProvider(
-//           urlTemplate: urlTemplate,
-//           // this is the maximum zoom of the provider, not the
-//           // maximum of the map. vector tiles are rendered
-//           // to larger sizes to support higher zoom levels
-//           maximumZoom: 14),
-//       maxSizeBytes: 1024 * 1024 * 2);
-// }
+VectorTileProvider _cachingTileProvider(String urlTemplate) {
+  return MemoryCacheVectorTileProvider(
+      delegate: NetworkVectorTileProvider(
+          urlTemplate: urlTemplate,
+          // this is the maximum zoom of the provider, not the
+          // maximum of the map. vector tiles are rendered
+          // to larger sizes to support higher zoom levels
+          maximumZoom: 14),
+      maxSizeBytes: 1024 * 1024 * 2);
+}
 
-// vectortile.Theme _mapTheme(BuildContext context) {
-//   // maps are rendered using themes
-//   // to provide a dark theme do something like this:
-//   // if (MediaQuery.of(context).platformBrightness == Brightness.dark) return myDarkTheme();
-//   return vectortile.ProvidedThemes.lightTheme();
-// }
+vectortile.Theme _mapTheme(BuildContext context) {
+  // maps are rendered using themes
+  // to provide a dark theme do something like this:
+  // if (MediaQuery.of(context).platformBrightness == Brightness.dark) return myDarkTheme();
+  return vectortile.ProvidedThemes.lightTheme();
+}

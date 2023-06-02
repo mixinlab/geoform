@@ -1,6 +1,6 @@
 part of 'geoform_bloc.dart';
 
-enum MapProvider { openStreetMap, customProvider }
+enum MapProvider { openStreetMap, customProvider, vectorProvider }
 
 class GeoformState extends Equatable {
   const GeoformState._({
