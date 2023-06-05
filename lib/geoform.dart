@@ -35,7 +35,7 @@ typedef GeoformFormBuilder<U extends GeoformMarkerDatum> = Widget Function(
 
 typedef GeoformActionsBuilder<U extends GeoformMarkerDatum> = Widget Function(
   BuildContext context,
-  GeoformState geostate,
+  GeoformState<U> geostate,
   void Function(U?) funcToSelectMarker,
   void Function(LatLng, double) funcToMove,
   void Function(bool) funcToChangeManual,
