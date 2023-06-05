@@ -9,11 +9,9 @@ import 'package:geoform/flutter_map_fast_markers/flutter_map_fast_markers.dart';
 abstract class GeoformMarkerDatum {
   const GeoformMarkerDatum({
     required this.position,
-    // this.sizeMeters,
   });
 
   final LatLng position;
-  // final double? sizeMeters;
 }
 
 typedef GeoformMarkerBuilder<U extends GeoformMarkerDatum> = FastMarker
@@ -38,8 +36,8 @@ GeoformMarkerBuilder<U> defaultMarkerBuilder<U extends GeoformMarkerDatum>({
   const alphaSmall = -2.09;
   const zoomMaxFactorSmall = 34;
   const smallPointSize = 3.8;
-  return <T>(T datum) {
-    final v = datum as GeoformMarkerDatum;
+  return (U datum) {
+    final v = datum;
     final width = size.width;
     final height = size.height;
 
@@ -58,10 +56,8 @@ GeoformMarkerBuilder<U> defaultMarkerBuilder<U extends GeoformMarkerDatum>({
                 redPaint,
               );
             }
-          : customDraw(v as U),
-      onTap: () => onTap == null ? null : onTap(v as U),
+          : customDraw(v),
+      onTap: () => onTap == null ? null : onTap(v),
     );
   };
 }
-
-// <T extends GeoformMarkerDatum>

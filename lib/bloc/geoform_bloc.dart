@@ -1,73 +1,67 @@
 import 'dart:async';
-
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
-import 'package:geoform/flutter_map_fast_markers/flutter_map_fast_markers.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:geoform/flutter_map_fast_markers/src/fast_polygon_layer.dart';
+import 'package:geoform/geoform_markers.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:geoform/geoform.dart';
 
 part 'geoform_event.dart';
 part 'geoform_state.dart';
 
-class GeoformBloc extends Bloc<GeoformEvent, GeoformState> {
+class GeoformBloc<U extends GeoformMarkerDatum>
+    extends Bloc<GeoformEvent, GeoformState<U>> {
   GeoformBloc({
     String? regionName,
     MapProvider? mapProvider,
-    LatLng? initialPosition,
-    required AnimationController animationController,
-  }) : super(GeoformState.initial(
+    List<U>? markers,
+    List<FastPolygon>? polygonsToDraw,
+    List<CircleMarker>? circlesToDraw,
+  }) : super(
+          GeoformState<U>._(
             regionName: regionName,
-            mapProvider: mapProvider,
-            initialPosition: initialPosition,
-            animationController: animationController)) {
+            mapProvider: mapProvider ?? MapProvider.openStreetMap,
+            markers: markers ?? [],
+            polygonsToDraw: polygonsToDraw ?? [],
+            circlesToDraw: circlesToDraw ?? [],
+          ),
+        ) {
     on<ManualChanged>(_onManualChanged);
-    on<GeoformContextUpdated>(_onGeoformContextUpdated);
     on<GeoformOnTap>(_onGeoformOnTap);
     on<AddRegion>(_onAddRegion);
-    on<ChangeMapPosition>(_onChangeMapPosition);
-    on<ChangeMarkers>(_onChangeMarkers);
-    on<AddAnimation>(_onAddAnimation);
+    on<InitLocationService>(_initLocationService);
+    on<UpdateMarkers<U>>(_onChangeMarkers);
+    on<UpdatePolygons>(_onChangePolygons);
+    on<UpdateCircles>(_onChangeCircles);
     on<ChangeActivateAction>(_onActivateAction);
-
-    _mapEventSubscription = state.mapController.mapEventStream.listen(
-      (event) => add(
-        ChangeMapPosition(
-          position: LatLng(
-            event.center.latitude,
-            event.center.longitude,
-          ),
-        ),
-      ),
-    )..pause();
+    on<SelectMarker<U>>(_selectDatum);
   }
 
-  late StreamSubscription<MapEvent> _mapEventSubscription;
+  final GeolocatorPlatform _geolocatorPlatform = GeolocatorPlatform.instance;
+  StreamSubscription? _locationSubscription;
 
-  void _onChangeMapPosition(
-      ChangeMapPosition event, Emitter<GeoformState> emit) {
-    emit(state.copyWith(currentMapPosition: event.position));
-  }
-
-  void _onChangeMarkers(ChangeMarkers event, Emitter<GeoformState> emit) {
+  void _onChangeMarkers(UpdateMarkers<U> event, Emitter<GeoformState<U>> emit) {
     emit(state.copyWith(markers: event.markers));
   }
 
-  void _onAddAnimation(AddAnimation event, Emitter<GeoformState> emit) {
-    emit(state.copyWith(animationController: event.controller));
+  void _onChangePolygons(UpdatePolygons event, Emitter<GeoformState<U>> emit) {
+    emit(state.copyWith(polygonsToDraw: event.polygons));
+  }
+
+  void _onChangeCircles(UpdateCircles event, Emitter<GeoformState<U>> emit) {
+    emit(state.copyWith(circlesToDraw: event.circles));
   }
 
   void _onActivateAction(
-      ChangeActivateAction event, Emitter<GeoformState> emit) {
+      ChangeActivateAction event, Emitter<GeoformState<U>> emit) {
     emit(state.copyWith(isActionActivated: event.isActivated));
   }
 
   Future<void> _onAddRegion(
-    AddRegion event,
-    Emitter<GeoformState> emit,
-  ) async {
+      AddRegion event, Emitter<GeoformState<U>> emit) async {
     if (event.region == null) {
       return;
     }
@@ -92,36 +86,66 @@ class GeoformBloc extends Bloc<GeoformEvent, GeoformState> {
     }
   }
 
+  Future<void> _initLocationService(
+    InitLocationService event,
+    Emitter<GeoformState<U>> emit,
+  ) async {
+    Position locationData;
+    LocationPermission permission;
+
+    final serviceEnabled = await _geolocatorPlatform.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return;
+    }
+    permission = await _geolocatorPlatform.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await _geolocatorPlatform.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return;
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      return;
+    }
+
+    locationData = await _geolocatorPlatform.getCurrentPosition();
+    emit(state.copyWith(userLocation: locationData));
+
+    _locationSubscription =
+        _geolocatorPlatform.getPositionStream().listen((locationData) async {
+      // emit(state.copyWith(userLocation: locationData));
+    });
+  }
+
   Future<void> _onManualChanged(
     ManualChanged event,
-    Emitter<GeoformState> emit,
+    Emitter<GeoformState<U>> emit,
   ) async {
     emit(state.copyWith(manual: event.manual));
-    if (event.manual) {
-      _mapEventSubscription.resume();
-    } else {
-      _mapEventSubscription.pause();
-    }
   }
 
-  Future<void> _onGeoformContextUpdated(
-    GeoformContextUpdated event,
-    Emitter<GeoformState> emit,
-  ) async {
-    emit(state.copyWith(context: event.context));
-  }
-
-  Future<void> _onGeoformOnTap(
+  void _onGeoformOnTap(
     GeoformOnTap event,
-    Emitter<GeoformState> emit,
+    Emitter<GeoformState<U>> emit,
   ) async {
     emit(state.copyWith(tapPosition: event.tapPosition));
   }
 
+  void _selectDatum(
+    SelectMarker<U> event,
+    Emitter<GeoformState<U>> emit,
+  ) {
+    if (state.manual) {
+      add(const ManualChanged(manual: false));
+    }
+    emit(state.changeMarker(selectedMarker: event.marker));
+    add(const ChangeActivateAction(isActivated: false));
+  }
+
   @override
   Future<void> close() {
-    _mapEventSubscription.cancel();
-    state.animationController.dispose();
+    // _mapEventSubscription?.cancel();
+    _locationSubscription?.cancel();
     return super.close();
   }
 }

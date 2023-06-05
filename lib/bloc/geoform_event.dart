@@ -13,15 +13,6 @@ class ManualChanged extends GeoformEvent {
   List<Object?> get props => [manual];
 }
 
-class GeoformContextUpdated extends GeoformEvent {
-  const GeoformContextUpdated({required this.context});
-
-  final GeoformContext context;
-
-  @override
-  List<Object?> get props => [context];
-}
-
 class GeoformOnTap extends GeoformEvent {
   const GeoformOnTap({required this.tapPosition});
   final TapPosition tapPosition;
@@ -42,34 +33,41 @@ class AddRegion extends GeoformEvent {
       ];
 }
 
-class ChangeMapPosition extends GeoformEvent {
-  const ChangeMapPosition({
-    this.position,
-  });
-  final LatLng? position;
+class InitLocationService extends GeoformEvent {
+  const InitLocationService();
 
   @override
-  List<Object?> get props => [position];
+  List<Object?> get props => [];
 }
 
-class ChangeMarkers extends GeoformEvent {
-  const ChangeMarkers({
+class UpdateMarkers<U extends GeoformMarkerDatum> extends GeoformEvent {
+  const UpdateMarkers({
     required this.markers,
   });
-  final List<FastMarker> markers;
+  final List<U> markers;
 
   @override
   List<Object?> get props => [markers];
 }
 
-class AddAnimation extends GeoformEvent {
-  const AddAnimation({
-    required this.controller,
+class UpdatePolygons extends GeoformEvent {
+  const UpdatePolygons({
+    required this.polygons,
   });
-  final AnimationController controller;
+  final List<FastPolygon> polygons;
 
   @override
-  List<Object?> get props => [controller];
+  List<Object?> get props => [polygons];
+}
+
+class UpdateCircles extends GeoformEvent {
+  const UpdateCircles({
+    required this.circles,
+  });
+  final List<CircleMarker> circles;
+
+  @override
+  List<Object?> get props => [circles];
 }
 
 class ChangeActivateAction extends GeoformEvent {
@@ -78,4 +76,12 @@ class ChangeActivateAction extends GeoformEvent {
 
   @override
   List<Object?> get props => [isActivated];
+}
+
+class SelectMarker<U extends GeoformMarkerDatum> extends GeoformEvent {
+  const SelectMarker({required this.marker});
+  final U? marker;
+
+  @override
+  List<Object?> get props => [marker];
 }

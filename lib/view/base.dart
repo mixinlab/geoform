@@ -1,14 +1,12 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map/plugin_api.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:geoform/animation/animation.dart';
 import 'package:geoform/animation/centroid.dart';
 import 'package:geoform/bottom/bottom.dart';
@@ -30,7 +28,6 @@ class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
     required this.markerBuilder,
     this.markerDrawer,
     this.records,
-    this.markers,
     this.initialPosition,
     this.initialZoom,
     this.onRecordSelected,
@@ -47,233 +44,102 @@ class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
     this.widgetsOnSelectedMarker = const [],
     this.additionalActionWidgets = const [],
     this.updateThenForm,
-    this.polygonsToDraw = const [],
-    this.circlesToDraw = const [],
     this.customTileProvider,
     this.urlTemplate = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     this.setManualModeOnAction = false,
   }) : super(key: key);
 
-  final GeoformFormBuilder<U> formBuilder;
+  final String title;
   final bool followUserPositionAtStart;
   final bool registerOnlyWithMarker;
   final bool registerWithManualSelection;
-  final String title;
+  final bool setManualModeOnAction;
 
+  final Widget? customTileProvider;
+  final String urlTemplate;
+
+  final GeoformFormBuilder<U> formBuilder;
   final GeoformMarkerBuilder<U>? markerBuilder;
-  final void Function(U marker)? onMarkerSelected;
-
-  final Future<List<T>>? records;
-  final List<U>? markers;
-  final LatLng? initialPosition;
-  final double? initialZoom;
-
   final GeoformMarkerDrawerBuilder<U>? markerDrawer;
 
+  final void Function(U marker)? onMarkerSelected;
   final void Function(T record)? onRecordSelected;
+  final void Function(BuildContext, GeoformContext)? onRegisterPressed;
+
+  final Future<List<T>>? records;
+  final LatLng? initialPosition;
+  final double? initialZoom;
 
   final GeoformBottomDisplayBuilder? bottomInformationBuilder;
   final GeoformBottomActionsBuilder? bottomActionsBuilder;
   final GeoformBottomInterface? bottomInterface;
-  final void Function(BuildContext, GeoformContext)? onRegisterPressed;
 
   // Functions to update pos and zoom
   final void Function(LatLng?)? updatePosition;
   final void Function(double?)? updateZoom;
 
-  final List<Widget Function(BuildContext, U?)> widgetsOnSelectedMarker;
-  final List<
-      Widget Function(
-        BuildContext,
-        GeoformState,
-        void Function(U),
-        void Function(LatLng, double),
-        List<U>?,
-      )> additionalActionWidgets;
+  final List<GeoformActionsBuilder<U>> widgetsOnSelectedMarker;
+  final List<GeoformActionsBuilder<U>> additionalActionWidgets;
   final void Function()? updateThenForm;
-
-  final List<FastPolygon> polygonsToDraw;
-  final List<CircleMarker> circlesToDraw;
-
-  final Widget? customTileProvider;
-  final String urlTemplate;
-
-  final bool setManualModeOnAction;
 
   @override
   State<GeoformView> createState() => _GeoformViewState<T, U>();
 }
 
 class _GeoformViewState<T, U extends GeoformMarkerDatum>
-    extends State<GeoformView<T, U>> {
-  // MapController mapController = MapController();
-  // LatLng _currentMapPosition = LatLng(0, 0);
-  // late StreamSubscription<MapEvent> mapEventSubscription;
-  // late AnimationController animationController;
-
-  // List<FastMarker> _markers = [];
-  // final _tapStreamController = StreamController<TapPosition>();
-
-  // bool _isActionActivated = false;
-
-  Position? _userLocation;
-  String? serviceError;
-
-  U? _selectedMarker;
-
-  late StreamSubscription _locationSubscription;
-
+    extends State<GeoformView<T, U>> with SingleTickerProviderStateMixin {
+  final _mapController = MapController();
+  late AnimationController _animationController;
   final TextEditingController actionTextController = TextEditingController();
+
+  GeoformMarkerBuilder<U> get _makerBuilderOrMarkerDrawer =>
+      widget.markerBuilder ??
+      defaultMarkerBuilder(
+        customDraw: widget.markerDrawer,
+        onTap: _selectDatum,
+      );
 
   @override
   void initState() {
     super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      initLocationService();
-    });
-
-    // mapEventSubscription = mapController.mapEventStream.listen((event) {
-    //   setState(() {
-    //     _currentMapPosition =
-    //         LatLng(event.center.latitude, event.center.longitude);
-    //   });
-    // })
-    //   ..pause();
-
-    // _currentMapPosition = widget.initialPosition ?? LatLng(50, 50);
-    context.read<GeoformBloc>().add(
-          ChangeMarkers(
-            markers: widget.markers
-                    ?.map<FastMarker>(_makerBuilderOrMarkerDrawer)
-                    .toList() ??
-                [],
-          ),
-        );
-    // animationController =
-    //     AnimationController(duration: const Duration(seconds: 1), vsync: this);
-    // setState(() {
-    //   _markers = widget.markers
-    //           ?.map<FastMarker>(_makerBuilderOrMarkerDrawer)
-    //           .toList() ??
-    //       [];
-    // });
-
-    // TODO(all): Catch errors;
+    _animationController =
+        AnimationController(duration: const Duration(seconds: 1), vsync: this);
   }
 
   @override
   void dispose() {
-    // animationController.dispose();
-    _locationSubscription.cancel();
-    // mapEventSubscription.cancel();
+    _animationController.dispose();
+    _mapController.dispose();
     super.dispose();
   }
 
-  void _selectDatum(GeoformMarkerDatum datum) {
+  void _selectDatum(U? datum) {
     setState(() {
-      if (context.read<GeoformBloc>().state.manual) {
-        context.read<GeoformBloc>().add(const ManualChanged(manual: false));
-      }
-      _selectedMarker = datum as U;
-      widget.onMarkerSelected?.call(datum);
+      if (datum != null) widget.onMarkerSelected?.call(datum);
       actionTextController.clear();
-      context
-          .read<GeoformBloc>()
-          .add(const ChangeActivateAction(isActivated: false));
+      context.read<GeoformBloc<U>>().add(SelectMarker(marker: datum));
     });
   }
 
-  GeoformMarkerBuilder<U> get _makerBuilderOrMarkerDrawer {
-    if (widget.markerDrawer != null) {
-      return defaultMarkerBuilder(
-        customDraw: widget.markerDrawer,
-        onTap: _selectDatum,
-      );
-    }
-
-    return widget.markerBuilder ??
-        defaultMarkerBuilder(
-          onTap: _selectDatum,
-        );
+  void _move(LatLng pos, double zoom) {
+    animatedMapMove(_mapController, _animationController, pos, zoom);
   }
 
-  Future<void> initLocationService() async {
-    Position locationData;
+  void _updateMarkers(List<U> markers) =>
+      context.read<GeoformBloc<U>>().add(UpdateMarkers(markers: markers));
 
-    try {
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      var askPermission = !serviceEnabled;
+  void _updatePolygons(List<FastPolygon> polygons) =>
+      context.read<GeoformBloc<U>>().add(UpdatePolygons(polygons: polygons));
 
-      if (serviceEnabled) {
-        final permission = await Geolocator.checkPermission();
-        final permission0 = permission == LocationPermission.always ||
-            permission == LocationPermission.whileInUse;
-        askPermission = !permission0;
+  void _updateCircles(List<CircleMarker> circles) =>
+      context.read<GeoformBloc<U>>().add(UpdateCircles(circles: circles));
 
-        if (permission0) {
-          locationData = await Geolocator.getCurrentPosition();
-          setState(() {
-            _userLocation = locationData;
-          });
-          if (widget.followUserPositionAtStart) {
-            animatedMapMove(
-              context.read<GeoformBloc>().state.mapController,
-              context.read<GeoformBloc>().state.animationController,
-              LatLng(
-                _userLocation?.latitude ?? 0,
-                _userLocation?.longitude ?? 0,
-              ),
-              18,
-            );
-          }
-
-          _locationSubscription =
-              Geolocator.getPositionStream().listen((locationData) async {
-            if (mounted) {
-              setState(() {
-                _userLocation = locationData;
-              });
-            }
-          });
-        }
-      }
-      if (askPermission) {
-        final serviceRequestResult = await Geolocator.requestPermission();
-        if (serviceRequestResult == LocationPermission.always ||
-            serviceRequestResult == LocationPermission.whileInUse) {
-          await initLocationService();
-          return;
-        }
-      }
-    } on PlatformException catch (e) {
-      debugPrint(e.toString());
-      if (e.code == 'PERMISSION_DENIED') {
-        serviceError = e.message;
-      } else if (e.code == 'SERVICE_STATUS_ERROR') {
-        serviceError = e.message;
-      }
-    }
-  }
+  void _changeManual(bool manual) =>
+      context.read<GeoformBloc<U>>().add(ManualChanged(manual: manual));
 
   @override
   Widget build(BuildContext context) {
-    LatLng? currentLatLng;
-
-    if (_userLocation != null) {
-      currentLatLng = LatLng(_userLocation!.latitude, _userLocation!.longitude);
-    }
-
-    final markers = <Marker>[
-      Marker(
-        width: 18,
-        height: 18,
-        point: currentLatLng ?? LatLng(0, 0),
-        builder: (ctx) => const DefaultLocationMarker(),
-      ),
-    ];
-
-    return BlocBuilder<GeoformBloc, GeoformState>(
+    return BlocBuilder<GeoformBloc<U>, GeoformState<U>>(
       builder: (context, state) {
         if (state.isDownloading) {
           return Center(
@@ -291,6 +157,18 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
             ),
           );
         }
+        final currentLatLng = state.userLocation != null
+            ? LatLng(
+                state.userLocation!.latitude, state.userLocation!.longitude)
+            : null;
+        final markers = <Marker>[
+          Marker(
+            width: 18,
+            height: 18,
+            point: currentLatLng ?? LatLng(0, 0),
+            builder: (ctx) => const DefaultLocationMarker(),
+          ),
+        ];
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -298,10 +176,10 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
               child: Stack(
                 children: [
                   FlutterMap(
-                    mapController: state.mapController,
+                    mapController: _mapController,
                     options: MapOptions(
                       onTap: (tapPosition, point) {
-                        context.read<GeoformBloc>().add(
+                        context.read<GeoformBloc<U>>().add(
                               GeoformOnTap(tapPosition: tapPosition),
                             );
                       },
@@ -326,20 +204,24 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                         }
                       },
                     ),
-                    children: <Widget>[
+                    children: [
                       baseTileProvider(),
                       CircleLayer(
-                        circles: widget.circlesToDraw,
+                        circles: state.circlesToDraw,
                       ),
                       FastPolygonLayer(
                         polygonCulling: true,
-                        polygons: widget.polygonsToDraw,
+                        polygons: state.polygonsToDraw,
                       ),
-                      FastMarkersLayer(state.markers),
+                      FastMarkersLayer<U>(
+                        state.markers
+                            .map<FastMarker>(_makerBuilderOrMarkerDrawer)
+                            .toList(),
+                      ),
                       MarkerLayer(markers: markers),
                     ],
                   ),
-                  if (_selectedMarker == null) ...{
+                  if (state.selectedMarker == null) ...{
                     if (widget.registerWithManualSelection)
                       Align(
                         alignment: Alignment.bottomLeft,
@@ -350,9 +232,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                             children: [
                               GeoformActionButton(
                                 icon: const Icon(Icons.ads_click_rounded),
-                                onPressed: () => context
-                                    .read<GeoformBloc>()
-                                    .add(ManualChanged(manual: !state.manual)),
+                                onPressed: () => _changeManual(!state.manual),
                               )
                             ],
                           ),
@@ -366,31 +246,25 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             GeoformActionButton(
-                              onPressed: () {
-                                animatedMapMove(
-                                  state.mapController,
-                                  state.animationController,
-                                  LatLng(
-                                    _userLocation!.latitude,
-                                    _userLocation!.longitude,
-                                  ),
-                                  18,
-                                );
-                              },
+                              onPressed: state.userLocation != null
+                                  ? () => _move(
+                                        LatLng(
+                                          state.userLocation?.latitude ?? 0,
+                                          state.userLocation?.longitude ?? 0,
+                                        ),
+                                        18,
+                                      )
+                                  : null,
                               icon: const Icon(Icons.gps_fixed),
                             ),
                             const SizedBox(height: 8),
                             GeoformActionButton(
                               onPressed: state.markers.isEmpty
                                   ? null
-                                  : () {
-                                      animatedMapMove(
-                                        state.mapController,
-                                        state.animationController,
+                                  : () => _move(
                                         getCentroid(markers: state.markers),
                                         13,
-                                      );
-                                    },
+                                      ),
                               icon: const Icon(Icons.circle_outlined),
                             ),
                           ],
@@ -402,9 +276,11 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                         context,
                         state,
                         _selectDatum,
-                        (p0, p1) => animatedMapMove(state.mapController,
-                            state.animationController, p0, p1),
-                        widget.markers,
+                        _move,
+                        _changeManual,
+                        _updateMarkers,
+                        _updatePolygons,
+                        _updateCircles,
                       ),
                   },
                   if (state.manual)
@@ -416,23 +292,25 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                       ),
                     )
                   else
-                    _selectedMarker == null
+                    state.selectedMarker == null
                         ? const SizedBox.shrink()
                         : GeoformMarkerOverlay(
-                            mapController: state.mapController,
-                            selectedMarker: _selectedMarker,
-                            onTapOutside: () => setState(() {
-                              _selectedMarker = null;
-                              context.read<GeoformBloc>().add(
-                                    const ChangeActivateAction(
-                                      isActivated: false,
-                                    ),
-                                  );
-                            }),
+                            mapController: _mapController,
+                            selectedMarker: state.selectedMarker,
+                            onTapOutside: () => _selectDatum(null),
                           ),
-                  if (_selectedMarker != null) ...{
+                  if (state.selectedMarker != null) ...{
                     for (var item in widget.widgetsOnSelectedMarker)
-                      item(context, _selectedMarker),
+                      item(
+                        context,
+                        state,
+                        _selectDatum,
+                        _move,
+                        _changeManual,
+                        _updateMarkers,
+                        _updatePolygons,
+                        _updateCircles,
+                      ),
                   },
                 ],
               ),
@@ -443,18 +321,18 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                   GeoformBottomInterface<U>(
                     actionActivated: state.isActionActivated,
                     currentPosition: currentLatLng ?? LatLng(0, 0),
-                    selectedMarker: _selectedMarker,
+                    selectedMarker: state.selectedMarker,
                     actionTextController: actionTextController,
                     onRegisterPressed:
                         (widget.registerWithManualSelection && state.manual) ||
                                 (widget.registerOnlyWithMarker &&
-                                    _selectedMarker != null)
+                                    state.selectedMarker != null)
                             ? () {
                                 final geoContext = GeoformContext(
                                   currentUserPosition:
                                       currentLatLng ?? LatLng(0, 0),
-                                  currentMapPosition: state.currentMapPosition!,
-                                  selectedMarker: _selectedMarker,
+                                  currentMapPosition: _mapController.center,
+                                  selectedMarker: state.selectedMarker,
                                   actionText: actionTextController.text,
                                 );
                                 if (widget.onRegisterPressed != null) {
@@ -479,20 +357,15 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                               }
                             : null,
                     onActionPressed: !widget.registerOnlyWithMarker ||
-                            _selectedMarker != null
+                            state.selectedMarker != null
                         ? () {
-                            // setState(() {
-                            //   _isActionActivated = !_isActionActivated;
-                            // });
-                            context.read<GeoformBloc>().add(
+                            context.read<GeoformBloc<U>>().add(
                                   ChangeActivateAction(
                                     isActivated: !state.isActionActivated,
                                   ),
                                 );
                             if (widget.setManualModeOnAction) {
-                              context
-                                  .read<GeoformBloc>()
-                                  .add(ManualChanged(manual: !state.manual));
+                              _changeManual(!state.manual);
                             }
                           }
                         : null,
@@ -509,7 +382,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
   }
 
   Widget baseTileProvider() {
-    return BlocBuilder<GeoformBloc, GeoformState>(
+    return BlocBuilder<GeoformBloc<U>, GeoformState<U>>(
       builder: (context, state) {
         if (state.mapProvider == MapProvider.openStreetMap) {
           return TileLayer(

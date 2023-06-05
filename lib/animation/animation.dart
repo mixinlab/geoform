@@ -28,7 +28,6 @@ void animatedMapMove(
     curve: Curves.fastOutSlowIn,
   );
 
-  // TODO(amaru): We need to deactivate any action button when we are animating the map.
   animationController
     ..reset()
     ..addListener(() {
@@ -41,17 +40,4 @@ void animatedMapMove(
       );
     })
     ..forward();
-
-  //animationController.addStatusListener((status) {
-  //  if (status == AnimationStatus.completed) {
-  //    // animationController.removeListener(() {});
-  //    // animationController.dispose();
-  //    // animationController.reset();
-  //  } else if (status == AnimationStatus.dismissed) {
-  //    // animationController.removeListener(mapMove);
-  //    // animationController.reset();
-  //  }
-  //});
-
-  //animationController.forward();
 }

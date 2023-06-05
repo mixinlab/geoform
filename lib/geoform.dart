@@ -33,6 +33,17 @@ typedef GeoformFormBuilder<U extends GeoformMarkerDatum> = Widget Function(
   GeoformContext geoformContext,
 );
 
+typedef GeoformActionsBuilder<U extends GeoformMarkerDatum> = Widget Function(
+  BuildContext context,
+  GeoformState geostate,
+  void Function(U?) funcToSelectMarker,
+  void Function(LatLng, double) funcToMove,
+  void Function(bool) funcToChangeManual,
+  void Function(List<U>) funcToUpdateMarkers,
+  void Function(List<FastPolygon>) funcToUpdatePolygons,
+  void Function(List<CircleMarker>) funcToUpdateCircles,
+);
+
 class Geoform<T, U extends GeoformMarkerDatum> extends StatefulWidget {
   const Geoform({
     Key? key,
@@ -94,15 +105,8 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatefulWidget {
   final void Function(LatLng?)? updatePosition;
   final void Function(double?)? updateZoom;
 
-  final List<Widget Function(BuildContext, U?)> widgetsOnSelectedMarker;
-  final List<
-      Widget Function(
-    BuildContext,
-    GeoformState,
-    void Function(U),
-    void Function(LatLng, double),
-    List<U>?,
-  )> additionalActionWidgets;
+  final List<GeoformActionsBuilder<U>> widgetsOnSelectedMarker;
+  final List<GeoformActionsBuilder<U>> additionalActionWidgets;
   final void Function()? updateThenForm;
 
   final List<FastPolygon> polygonsToDraw;
@@ -122,35 +126,32 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatefulWidget {
 }
 
 class _GeoformState<T, U extends GeoformMarkerDatum>
-    extends State<Geoform<T, U>> with SingleTickerProviderStateMixin {
+    extends State<Geoform<T, U>> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => GeoformBloc(
+      create: (context) => GeoformBloc<U>(
         regionName: widget.regionName,
         mapProvider: widget.mapProvider,
-        initialPosition: widget.initialPosition,
-        animationController: AnimationController(
-          duration: const Duration(seconds: 1),
-          vsync: this,
-        ),
-      )..add(
-          AddRegion(region: widget.region),
-        ),
+        markers: widget.markers,
+        polygonsToDraw: widget.polygonsToDraw,
+        circlesToDraw: widget.circlesToDraw,
+      )
+        ..add(AddRegion(region: widget.region))
+        ..add(const InitLocationService()),
       child: GeoformView<T, U>(
         formBuilder: widget.formBuilder,
         title: widget.title,
-        markerBuilder: widget.markerBuilder,
-        records: widget.records,
-        markers: widget.markers,
         initialPosition: widget.initialPosition,
         initialZoom: widget.initialZoom,
+        followUserPositionAtStart: widget.followUserPositionAtStart,
+        markerBuilder: widget.markerBuilder,
+        records: widget.records,
         markerDrawer: widget.markerDrawerBuilder,
         onRecordSelected: widget.onRecordSelected,
         onMarkerSelected: widget.onMarkerSelected,
         registerOnlyWithMarker: widget.registerOnlyWithMarker,
         registerWithManualSelection: widget.registerWithManualSelection,
-        followUserPositionAtStart: widget.followUserPositionAtStart,
         bottomInformationBuilder: widget.bottomInformationBuilder,
         bottomActionsBuilder: widget.bottomActionsBuilder,
         bottomInterface: widget.bottomInterface,
@@ -160,8 +161,6 @@ class _GeoformState<T, U extends GeoformMarkerDatum>
         widgetsOnSelectedMarker: widget.widgetsOnSelectedMarker,
         additionalActionWidgets: widget.additionalActionWidgets,
         updateThenForm: widget.updateThenForm,
-        polygonsToDraw: widget.polygonsToDraw,
-        circlesToDraw: widget.circlesToDraw,
         customTileProvider: widget.customTileProvider,
         urlTemplate: widget.urlTemplate ??
             'https://tile.openstreetmap.org/{z}/{x}/{y}.png',

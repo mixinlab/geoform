@@ -1,12 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:geoform/bloc/geoform_bloc.dart';
 import 'package:geoform/geoform_markers.dart';
 import 'package:geoform/view/ui.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geoform/geoform.dart';
+import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await FMTC.initialise();
+  await FMTC.instance.rootDirectory.migrator.fromV6(urlTemplates: []);
+  await FMTC.instance('mapStore').manage.createAsync();
   runApp(const MyApp());
 }
 
@@ -24,24 +28,11 @@ class _MyAppState extends State<MyApp> {
     initPlatformState();
   }
 
-  // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // We also handle the message potentially returning null.
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
     if (!mounted) return;
 
     setState(() {});
   }
-
-  // final tileLayerOptions = TileLayerOptions(
-  //   urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-  //   subdomains: ['a', 'b', 'c'],
-  //   tileProvider: const CachedTileProvider(),
-  // );
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +51,7 @@ class Home extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Plugin example app'),
       ),
-      body: Geoform(
+      body: Geoform<MyMarker, MyMarker>(
         title: "Geoform",
         registerOnlyWithMarker: true,
         registerWithManualSelection: true,
@@ -87,7 +78,7 @@ class Home extends StatelessWidget {
           );
         },
         widgetsOnSelectedMarker: [
-          (_, marker) => Align(
+          (p0, geostate, p1, p2, p3, p4, p5, p6) => Align(
                 alignment: Alignment.bottomLeft,
                 child: Padding(
                   padding: const EdgeInsets.all(8),
@@ -99,9 +90,17 @@ class Home extends StatelessWidget {
                         onPressed: () => showDialog(
                           context: context,
                           builder: (_) {
+                            final lat =
+                                geostate.selectedMarker?.position.latitude;
+                            final lng =
+                                geostate.selectedMarker?.position.longitude;
                             return AlertDialog(
                               title: const Text('Information'),
-                              content: const Text("Data"),
+                              content: geostate.selectedMarker == null
+                                  ? const Text("No Data")
+                                  : Text(
+                                      "$lat,$lng",
+                                    ),
                               actions: <Widget>[
                                 TextButton(
                                   onPressed: () => Navigator.pop<void>(context),
@@ -124,9 +123,7 @@ class Home extends StatelessWidget {
               ),
         ],
         additionalActionWidgets: [
-          (_, GeoformState state, void Function(MyMarker) selectDatum,
-                  void Function(LatLng, double) move, __) =>
-              Align(
+          (p0, state, selectDatum, move, p1, p2, p3, p4) => Align(
                 alignment: Alignment.bottomLeft,
                 child: Padding(
                   padding: const EdgeInsets.all(8),
@@ -152,9 +149,10 @@ class Home extends StatelessWidget {
                                     );
                                     move(mark.position, 18);
                                     await Future.delayed(
-                                        const Duration(seconds: 1));
+                                            const Duration(seconds: 1))
+                                        .then((value) =>
+                                            Navigator.pop<void>(context));
                                     selectDatum(mark);
-                                    Navigator.pop<void>(context);
                                   },
                                   child: const Text(
                                     'Ok',

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/plugin_api.dart';
+import 'package:geoform/geoform_markers.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geoform/bloc/geoform_bloc.dart';
 
@@ -38,7 +39,7 @@ class FastMarker {
   bool? show;
 }
 
-class FastMarkersLayer extends StatelessWidget {
+class FastMarkersLayer<U extends GeoformMarkerDatum> extends StatelessWidget {
   const FastMarkersLayer(this.markers, {super.key});
 
   final List<FastMarker> markers;
@@ -49,11 +50,11 @@ class FastMarkersLayer extends StatelessWidget {
       mapState,
       markers,
     );
-    return BlocListener<GeoformBloc, GeoformState>(
+    return BlocListener<GeoformBloc<U>, GeoformState<U>>(
       listenWhen: (previous, current) =>
           previous.tapPosition != current.tapPosition,
       listener: (context, state) {
-        painter.onTap(state.tapPosition!.relative);
+        painter.onTap(state.tapPosition!.relative!);
       },
       child: SizedBox.expand(
         child: CustomPaint(
@@ -196,9 +197,9 @@ class _FastMarkersPainter extends CustomPainter {
     _lastZoom = map.zoom;
   }
 
-  bool onTap(Offset? pos) {
+  bool onTap(Offset pos) {
     final marker = markersBoundsCache.reversed.firstWhereOrNull(
-      (e) => e.key.contains(CustomPoint(pos!.dx, pos.dy)),
+      (e) => e.key.contains(CustomPoint(pos.dx, pos.dy)),
     );
     if (marker != null) {
       marker.value.onTap?.call();
