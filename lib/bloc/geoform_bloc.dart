@@ -7,7 +7,6 @@ import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:geoform/flutter_map_fast_markers/src/fast_polygon_layer.dart';
 import 'package:geoform/geoform_markers.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geoform/geoform.dart';
 
 part 'geoform_event.dart';
 part 'geoform_state.dart';
@@ -41,7 +40,7 @@ class GeoformBloc<U extends GeoformMarkerDatum>
   }
 
   final GeolocatorPlatform _geolocatorPlatform = GeolocatorPlatform.instance;
-  StreamSubscription? _locationSubscription;
+  // StreamSubscription? _locationSubscription;
 
   void _onChangeMarkers(UpdateMarkers<U> event, Emitter<GeoformState<U>> emit) {
     emit(state.copyWith(markers: event.markers));
@@ -111,16 +110,16 @@ class GeoformBloc<U extends GeoformMarkerDatum>
     locationData = await _geolocatorPlatform.getCurrentPosition();
     emit(state.copyWith(userLocation: locationData));
 
-    _locationSubscription =
-        _geolocatorPlatform.getPositionStream().listen((locationData) async {
-      // emit(state.copyWith(userLocation: locationData));
-    });
+    // _locationSubscription =
+    //     _geolocatorPlatform.getPositionStream().listen((locationData) async {
+    //   // emit(state.copyWith(userLocation: locationData));
+    // });
   }
 
-  Future<void> _onManualChanged(
+  void _onManualChanged(
     ManualChanged event,
     Emitter<GeoformState<U>> emit,
-  ) async {
+  ) {
     emit(state.copyWith(manual: event.manual));
   }
 
@@ -144,8 +143,7 @@ class GeoformBloc<U extends GeoformMarkerDatum>
 
   @override
   Future<void> close() {
-    // _mapEventSubscription?.cancel();
-    _locationSubscription?.cancel();
+    // _locationSubscription?.cancel();
     return super.close();
   }
 }

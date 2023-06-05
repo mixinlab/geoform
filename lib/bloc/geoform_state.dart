@@ -33,8 +33,6 @@ class GeoformState<U extends GeoformMarkerDatum> extends Equatable {
     List<U>? markers,
     List<FastPolygon>? polygonsToDraw,
     List<CircleMarker>? circlesToDraw,
-    GeoformContext? context,
-    MapController? mapController,
     AnimationController? animationController,
     bool? manual,
     TapPosition? tapPosition,

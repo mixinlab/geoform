@@ -64,7 +64,7 @@ class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
 
   final void Function(U marker)? onMarkerSelected;
   final void Function(T record)? onRecordSelected;
-  final void Function(BuildContext, GeoformContext)? onRegisterPressed;
+  final void Function(BuildContext, GeoformContext<U>)? onRegisterPressed;
 
   final Future<List<T>>? records;
   final LatLng? initialPosition;
@@ -97,6 +97,15 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
       defaultMarkerBuilder(
         customDraw: widget.markerDrawer,
         onTap: _selectDatum,
+      );
+
+  GeoFunctions<U> get _geofunctions => GeoFunctions(
+        _selectDatum,
+        _move,
+        _changeManual,
+        _updateMarkers,
+        _updatePolygons,
+        _updateCircles,
       );
 
   @override
@@ -274,13 +283,15 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                     for (var item in widget.additionalActionWidgets)
                       item(
                         context,
-                        state,
-                        _selectDatum,
-                        _move,
-                        _changeManual,
-                        _updateMarkers,
-                        _updatePolygons,
-                        _updateCircles,
+                        GeoformContext<U>(
+                          currentUserPosition: LatLng(
+                            state.userLocation?.latitude ?? 0,
+                            state.userLocation?.longitude ?? 0,
+                          ),
+                          currentMapPosition: _mapController.center,
+                          geostate: state,
+                          functions: _geofunctions,
+                        ),
                       ),
                   },
                   if (state.manual)
@@ -303,13 +314,15 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                     for (var item in widget.widgetsOnSelectedMarker)
                       item(
                         context,
-                        state,
-                        _selectDatum,
-                        _move,
-                        _changeManual,
-                        _updateMarkers,
-                        _updatePolygons,
-                        _updateCircles,
+                        GeoformContext<U>(
+                          currentUserPosition: LatLng(
+                            state.userLocation?.latitude ?? 0,
+                            state.userLocation?.longitude ?? 0,
+                          ),
+                          currentMapPosition: _mapController.center,
+                          geostate: state,
+                          functions: _geofunctions,
+                        ),
                       ),
                   },
                 ],
@@ -328,11 +341,14 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                                 (widget.registerOnlyWithMarker &&
                                     state.selectedMarker != null)
                             ? () {
-                                final geoContext = GeoformContext(
-                                  currentUserPosition:
-                                      currentLatLng ?? LatLng(0, 0),
+                                final geoContext = GeoformContext<U>(
+                                  currentUserPosition: LatLng(
+                                    state.userLocation?.latitude ?? 0,
+                                    state.userLocation?.longitude ?? 0,
+                                  ),
                                   currentMapPosition: _mapController.center,
-                                  selectedMarker: state.selectedMarker,
+                                  geostate: state,
+                                  functions: _geofunctions,
                                   actionText: actionTextController.text,
                                 );
                                 if (widget.onRegisterPressed != null) {

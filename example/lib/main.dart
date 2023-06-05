@@ -78,7 +78,7 @@ class Home extends StatelessWidget {
           );
         },
         widgetsOnSelectedMarker: [
-          (p0, geostate, p1, p2, p3, p4, p5, p6) => Align(
+          (_, geocontext) => Align(
                 alignment: Alignment.bottomLeft,
                 child: Padding(
                   padding: const EdgeInsets.all(8),
@@ -90,17 +90,18 @@ class Home extends StatelessWidget {
                         onPressed: () => showDialog(
                           context: context,
                           builder: (_) {
-                            final lat =
-                                geostate.selectedMarker?.position.latitude;
-                            final lng =
-                                geostate.selectedMarker?.position.longitude;
+                            final lat = geocontext
+                                .geostate.selectedMarker?.position.latitude;
+                            final lng = geocontext
+                                .geostate.selectedMarker?.position.longitude;
                             return AlertDialog(
                               title: const Text('Information'),
-                              content: geostate.selectedMarker == null
-                                  ? const Text("No Data")
-                                  : Text(
-                                      "$lat,$lng",
-                                    ),
+                              content:
+                                  geocontext.geostate.selectedMarker == null
+                                      ? const Text("No Data")
+                                      : Text(
+                                          "$lat,$lng",
+                                        ),
                               actions: <Widget>[
                                 TextButton(
                                   onPressed: () => Navigator.pop<void>(context),
@@ -123,7 +124,7 @@ class Home extends StatelessWidget {
               ),
         ],
         additionalActionWidgets: [
-          (p0, state, selectDatum, move, p1, p2, p3, p4) => Align(
+          (_, geocontext) => Align(
                 alignment: Alignment.bottomLeft,
                 child: Padding(
                   padding: const EdgeInsets.all(8),
@@ -147,12 +148,14 @@ class Home extends StatelessWidget {
                                         -71.509028501,
                                       ),
                                     );
-                                    move(mark.position, 18);
+                                    geocontext.functions
+                                        .funcToMove(mark.position, 18);
                                     await Future.delayed(
                                             const Duration(seconds: 1))
                                         .then((value) =>
                                             Navigator.pop<void>(context));
-                                    selectDatum(mark);
+                                    geocontext.functions
+                                        .funcToSelectMarker(mark);
                                   },
                                   child: const Text(
                                     'Ok',

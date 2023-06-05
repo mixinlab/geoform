@@ -11,18 +11,39 @@ import 'package:geoform/flutter_map_fast_markers/src/fast_polygon_layer.dart';
 import 'package:geoform/geoform_markers.dart';
 import 'package:geoform/view/view.dart';
 
-class GeoformContext {
+class GeoFunctions<U extends GeoformMarkerDatum> {
+  final void Function(U?) funcToSelectMarker;
+  final void Function(LatLng, double) funcToMove;
+  final void Function(bool) funcToChangeManual;
+  final void Function(List<U>) funcToUpdateMarkers;
+  final void Function(List<FastPolygon>) funcToUpdatePolygons;
+  final void Function(List<CircleMarker>) funcToUpdateCircles;
+
+  GeoFunctions(
+    this.funcToSelectMarker,
+    this.funcToMove,
+    this.funcToChangeManual,
+    this.funcToUpdateMarkers,
+    this.funcToUpdatePolygons,
+    this.funcToUpdateCircles,
+  );
+}
+
+class GeoformContext<U extends GeoformMarkerDatum> {
   GeoformContext({
     required this.currentUserPosition,
     required this.currentMapPosition,
-    this.selectedMarker,
+    required this.geostate,
+    required this.functions,
     this.extra,
     this.actionText,
   });
 
   final LatLng currentUserPosition;
   final LatLng currentMapPosition;
-  final GeoformMarkerDatum? selectedMarker;
+  final GeoformState<U> geostate;
+  final GeoFunctions<U> functions;
+
   final Map<String, dynamic>? extra;
 
   final String? actionText;
@@ -30,18 +51,12 @@ class GeoformContext {
 
 typedef GeoformFormBuilder<U extends GeoformMarkerDatum> = Widget Function(
   BuildContext context,
-  GeoformContext geoformContext,
+  GeoformContext<U> geoformContext,
 );
 
 typedef GeoformActionsBuilder<U extends GeoformMarkerDatum> = Widget Function(
   BuildContext context,
-  GeoformState<U> geostate,
-  void Function(U?) funcToSelectMarker,
-  void Function(LatLng, double) funcToMove,
-  void Function(bool) funcToChangeManual,
-  void Function(List<U>) funcToUpdateMarkers,
-  void Function(List<FastPolygon>) funcToUpdatePolygons,
-  void Function(List<CircleMarker>) funcToUpdateCircles,
+  GeoformContext<U> geoformContext,
 );
 
 class Geoform<T, U extends GeoformMarkerDatum> extends StatefulWidget {
@@ -99,7 +114,7 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatefulWidget {
   final GeoformBottomDisplayBuilder? bottomInformationBuilder;
   final GeoformBottomActionsBuilder? bottomActionsBuilder;
   final GeoformBottomInterface? bottomInterface;
-  final void Function(BuildContext, GeoformContext)? onRegisterPressed;
+  final void Function(BuildContext, GeoformContext<U>)? onRegisterPressed;
 
   // Functions to update pos and zoom
   final void Function(LatLng?)? updatePosition;
