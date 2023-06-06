@@ -70,9 +70,9 @@ class GeoformView<T, U extends GeoformMarkerDatum> extends StatefulWidget {
   final LatLng? initialPosition;
   final double? initialZoom;
 
-  final GeoformBottomDisplayBuilder? bottomInformationBuilder;
-  final GeoformBottomActionsBuilder? bottomActionsBuilder;
-  final GeoformBottomInterface? bottomInterface;
+  final GeoformBottomDisplayBuilder<U>? bottomInformationBuilder;
+  final GeoformBottomActionsBuilder<U>? bottomActionsBuilder;
+  final GeoformBottomInterface<U>? bottomInterface;
 
   // Functions to update pos and zoom
   final void Function(LatLng?)? updatePosition;
@@ -333,28 +333,26 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
               child: widget.bottomInterface ??
                   GeoformBottomInterface<U>(
                     actionActivated: state.isActionActivated,
-                    currentPosition: currentLatLng ?? LatLng(0, 0),
-                    selectedMarker: state.selectedMarker,
+                    geoformContext: GeoformContext<U>(
+                      currentUserPosition: LatLng(
+                        state.userLocation?.latitude ?? 0,
+                        state.userLocation?.longitude ?? 0,
+                      ),
+                      currentMapPosition: _mapController.center,
+                      geostate: state,
+                      functions: _geofunctions,
+                      actionText: actionTextController.text,
+                    ),
                     actionTextController: actionTextController,
                     onRegisterPressed:
                         (widget.registerWithManualSelection && state.manual) ||
                                 (widget.registerOnlyWithMarker &&
                                     state.selectedMarker != null)
-                            ? () {
-                                final geoContext = GeoformContext<U>(
-                                  currentUserPosition: LatLng(
-                                    state.userLocation?.latitude ?? 0,
-                                    state.userLocation?.longitude ?? 0,
-                                  ),
-                                  currentMapPosition: _mapController.center,
-                                  geostate: state,
-                                  functions: _geofunctions,
-                                  actionText: actionTextController.text,
-                                );
+                            ? (geoformcontext) {
                                 if (widget.onRegisterPressed != null) {
                                   widget.onRegisterPressed!.call(
                                     context,
-                                    geoContext,
+                                    geoformcontext,
                                   );
                                 } else {
                                   Navigator.push<void>(
@@ -362,7 +360,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                                     MaterialPageRoute(
                                       builder: (context) => widget.formBuilder(
                                         context,
-                                        geoContext,
+                                        geoformcontext,
                                       ),
                                     ),
                                   ).then((value) {
@@ -374,7 +372,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                             : null,
                     onActionPressed: !widget.registerOnlyWithMarker ||
                             state.selectedMarker != null
-                        ? () {
+                        ? (geoformcontext) {
                             context.read<GeoformBloc<U>>().add(
                                   ChangeActivateAction(
                                     isActivated: !state.isActionActivated,

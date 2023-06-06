@@ -181,7 +181,7 @@ class Home extends StatelessWidget {
           context,
           actionActivated,
           actionTextController,
-          selectedMarker,
+          geoformcontext,
           onActionPressed,
           onRegisterPressed,
         ) {
@@ -193,9 +193,8 @@ class Home extends StatelessWidget {
                   autocorrect: false,
                   controller: actionTextController,
                   decoration: InputDecoration(
-                    prefixText: (selectedMarker! as MyMarker)
-                        .position
-                        .latitude
+                    prefixText: geoformcontext
+                        .geostate.selectedMarker!.position.latitude
                         .toString(),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,

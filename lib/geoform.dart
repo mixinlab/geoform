@@ -111,9 +111,9 @@ class Geoform<T, U extends GeoformMarkerDatum> extends StatefulWidget {
   final LatLng? initialPosition;
   final double? initialZoom;
 
-  final GeoformBottomDisplayBuilder? bottomInformationBuilder;
-  final GeoformBottomActionsBuilder? bottomActionsBuilder;
-  final GeoformBottomInterface? bottomInterface;
+  final GeoformBottomDisplayBuilder<U>? bottomInformationBuilder;
+  final GeoformBottomActionsBuilder<U>? bottomActionsBuilder;
+  final GeoformBottomInterface<U>? bottomInterface;
   final void Function(BuildContext, GeoformContext<U>)? onRegisterPressed;
 
   // Functions to update pos and zoom

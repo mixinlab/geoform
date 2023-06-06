@@ -1,28 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:geoform/geoform.dart';
 import 'package:geoform/bottom/bottom_widgets.dart';
 import 'package:geoform/geoform_markers.dart';
 
 typedef GeoformBottomDisplayBuilder<U extends GeoformMarkerDatum> = Widget
-    Function(BuildContext, LatLng?, U?);
+    Function(BuildContext, GeoformContext<U>);
 
-typedef GeoformBottomActionsBuilder<U extends GeoformMarkerDatum> = Widget
-    Function(
-  BuildContext,
-  bool,
-  TextEditingController?,
-  U?,
-  void Function()?,
-  void Function()?,
-);
+typedef GeoformBottomActionsBuilder<U extends GeoformMarkerDatum>
+    = Widget Function(BuildContext, bool, TextEditingController?,
+        GeoformContext<U>, void Function()?, void Function()?);
 
 class GeoformBottomInterface<U extends GeoformMarkerDatum>
     extends StatelessWidget {
   const GeoformBottomInterface({
     required this.title,
     required this.registerOnlyWithMarker,
-    required this.selectedMarker,
-    this.currentPosition,
+    required this.geoformContext,
     this.informationBuilder,
     this.actionsBuilder,
     this.onRegisterPressed,
@@ -33,16 +26,15 @@ class GeoformBottomInterface<U extends GeoformMarkerDatum>
   }) : super(key: key);
 
   final String title;
-  final U? selectedMarker;
-  final LatLng? currentPosition;
+  final GeoformContext<U> geoformContext;
 
   final bool registerOnlyWithMarker;
 
   final GeoformBottomDisplayBuilder<U>? informationBuilder;
   final GeoformBottomActionsBuilder<U>? actionsBuilder;
 
-  final void Function()? onRegisterPressed;
-  final void Function()? onActionPressed;
+  final void Function(GeoformContext<U>)? onRegisterPressed;
+  final void Function(GeoformContext<U>)? onActionPressed;
 
   final bool actionActivated;
 
@@ -58,20 +50,30 @@ class GeoformBottomInterface<U extends GeoformMarkerDatum>
           Text(title, style: const TextStyle(fontSize: 20)),
           const SizedBox(height: 16),
           if (informationBuilder != null)
-            informationBuilder!(context, currentPosition, selectedMarker)
+            informationBuilder!(context, geoformContext)
           else
-            BottomInformation(selectedMarker: selectedMarker),
+            BottomInformation<U>(
+              selectedMarker: geoformContext.geostate.selectedMarker,
+            ),
           if (actionsBuilder != null)
             actionsBuilder!(
               context,
               actionActivated,
               actionTextController,
-              selectedMarker,
-              onActionPressed,
-              onRegisterPressed,
+              geoformContext,
+              () => onActionPressed != null
+                  ? onActionPressed!(geoformContext)
+                  : null,
+              () => onRegisterPressed != null
+                  ? onRegisterPressed!(geoformContext)
+                  : null,
             )
           else
-            BottomActions(onRegisterPressed: onRegisterPressed),
+            BottomActions(
+              onRegisterPressed: () => onRegisterPressed != null
+                  ? onRegisterPressed!(geoformContext)
+                  : null,
+            ),
         ],
       ),
     );
