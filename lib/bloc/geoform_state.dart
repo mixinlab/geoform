@@ -15,6 +15,7 @@ class GeoformState<U extends GeoformMarkerDatum> extends Equatable {
     this.isActionActivated = false,
     this.selectedMarker,
     this.userLocation,
+    this.mapPosition,
   });
 
   final List<U> markers;
@@ -28,6 +29,7 @@ class GeoformState<U extends GeoformMarkerDatum> extends Equatable {
   final bool isActionActivated;
   final U? selectedMarker;
   final Position? userLocation;
+  final LatLng? mapPosition;
 
   GeoformState<U> copyWith({
     List<U>? markers,
@@ -41,6 +43,7 @@ class GeoformState<U extends GeoformMarkerDatum> extends Equatable {
     MapProvider? mapProvider,
     bool? isActionActivated,
     Position? userLocation,
+    LatLng? mapPosition,
   }) {
     return GeoformState._(
       markers: markers ?? this.markers,
@@ -53,6 +56,7 @@ class GeoformState<U extends GeoformMarkerDatum> extends Equatable {
       mapProvider: mapProvider ?? this.mapProvider,
       isActionActivated: isActionActivated ?? this.isActionActivated,
       userLocation: userLocation ?? this.userLocation,
+      mapPosition: mapPosition ?? this.mapPosition,
       selectedMarker: selectedMarker,
     );
   }
@@ -71,6 +75,7 @@ class GeoformState<U extends GeoformMarkerDatum> extends Equatable {
       mapProvider: mapProvider,
       isActionActivated: isActionActivated,
       userLocation: userLocation,
+      mapPosition: mapPosition,
       selectedMarker: selectedMarker,
     );
   }
@@ -88,5 +93,6 @@ class GeoformState<U extends GeoformMarkerDatum> extends Equatable {
         isActionActivated,
         selectedMarker,
         userLocation,
+        mapPosition,
       ];
 }

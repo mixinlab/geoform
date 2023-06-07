@@ -85,3 +85,10 @@ class SelectMarker<U extends GeoformMarkerDatum> extends GeoformEvent {
   @override
   List<Object?> get props => [marker];
 }
+
+class UpdateMapPosition extends GeoformEvent {
+  const UpdateMapPosition({required this.mapPosition});
+  final LatLng? mapPosition;
+  @override
+  List<Object?> get props => [mapPosition];
+}

@@ -43,7 +43,41 @@ class _MyAppState extends State<MyApp> {
 }
 
 class Home extends StatelessWidget {
-  const Home({Key? key}) : super(key: key);
+  const Home({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Bienvenido a Geoform")),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Expanded(
+                  child: ElevatedButton(
+                    child: const Text("Ir a Geoform"),
+                    onPressed: () => Navigator.push<void>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const GeoPage(),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class GeoPage extends StatelessWidget {
+  const GeoPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -132,7 +166,7 @@ class Home extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       GeoformActionButton(
-                        icon: const Icon(Icons.map_outlined),
+                        icon: const Icon(Icons.arrow_forward_rounded),
                         onPressed: () => showDialog(
                           context: context,
                           builder: (_) {
@@ -166,6 +200,20 @@ class Home extends StatelessWidget {
                                   ),
                                 ),
                               ],
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      GeoformActionButton(
+                        icon: const Icon(Icons.map),
+                        onPressed: () => showDialog(
+                          context: context,
+                          builder: (_) {
+                            return AlertDialog(
+                              title: const Text('Current Map Position'),
+                              content: Text(
+                                  "${geocontext.currentMapPosition.latitude}, ${geocontext.currentMapPosition.longitude}"),
                             );
                           },
                         ),

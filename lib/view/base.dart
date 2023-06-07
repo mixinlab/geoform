@@ -203,6 +203,9 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                           InteractiveFlag.flingAnimation |
                           InteractiveFlag.pinchMove,
                       onPositionChanged: (position, hasGesture) {
+                        context.read<GeoformBloc<U>>().add(
+                              UpdateMapPosition(mapPosition: position.center),
+                            );
                         final zoom = position.zoom;
                         final pos = position.center;
                         if (widget.updateZoom != null) {
@@ -288,7 +291,8 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                             state.userLocation?.latitude ?? 0,
                             state.userLocation?.longitude ?? 0,
                           ),
-                          currentMapPosition: _mapController.center,
+                          currentMapPosition:
+                              state.mapPosition ?? LatLng(50, 50),
                           geostate: state,
                           functions: _geofunctions,
                         ),
@@ -319,7 +323,8 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                             state.userLocation?.latitude ?? 0,
                             state.userLocation?.longitude ?? 0,
                           ),
-                          currentMapPosition: _mapController.center,
+                          currentMapPosition:
+                              state.mapPosition ?? LatLng(50, 50),
                           geostate: state,
                           functions: _geofunctions,
                         ),
@@ -338,7 +343,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                         state.userLocation?.latitude ?? 0,
                         state.userLocation?.longitude ?? 0,
                       ),
-                      currentMapPosition: _mapController.center,
+                      currentMapPosition: state.mapPosition ?? LatLng(50, 50),
                       geostate: state,
                       functions: _geofunctions,
                       actionText: actionTextController.text,

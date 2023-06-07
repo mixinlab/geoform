@@ -151,6 +151,7 @@ class _GeoformState<T, U extends GeoformMarkerDatum>
         markers: widget.markers,
         polygonsToDraw: widget.polygonsToDraw,
         circlesToDraw: widget.circlesToDraw,
+        mapPosition: widget.initialPosition,
       )
         ..add(AddRegion(region: widget.region))
         ..add(const InitLocationService()),

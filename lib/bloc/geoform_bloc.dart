@@ -7,6 +7,7 @@ import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:geoform/flutter_map_fast_markers/src/fast_polygon_layer.dart';
 import 'package:geoform/geoform_markers.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 
 part 'geoform_event.dart';
 part 'geoform_state.dart';
@@ -19,6 +20,7 @@ class GeoformBloc<U extends GeoformMarkerDatum>
     List<U>? markers,
     List<FastPolygon>? polygonsToDraw,
     List<CircleMarker>? circlesToDraw,
+    LatLng? mapPosition,
   }) : super(
           GeoformState<U>._(
             regionName: regionName,
@@ -26,6 +28,7 @@ class GeoformBloc<U extends GeoformMarkerDatum>
             markers: markers ?? [],
             polygonsToDraw: polygonsToDraw ?? [],
             circlesToDraw: circlesToDraw ?? [],
+            mapPosition: mapPosition,
           ),
         ) {
     on<ManualChanged>(_onManualChanged);
@@ -37,6 +40,7 @@ class GeoformBloc<U extends GeoformMarkerDatum>
     on<UpdateCircles>(_onChangeCircles);
     on<ChangeActivateAction>(_onActivateAction);
     on<SelectMarker<U>>(_selectDatum);
+    on<UpdateMapPosition>(_updateMapPosition);
   }
 
   final GeolocatorPlatform _geolocatorPlatform = GeolocatorPlatform.instance;
@@ -139,6 +143,13 @@ class GeoformBloc<U extends GeoformMarkerDatum>
     }
     emit(state.changeMarker(selectedMarker: event.marker));
     add(const ChangeActivateAction(isActivated: false));
+  }
+
+  void _updateMapPosition(
+    UpdateMapPosition event,
+    Emitter<GeoformState<U>> emit,
+  ) {
+    emit(state.copyWith(mapPosition: event.mapPosition));
   }
 
   @override
