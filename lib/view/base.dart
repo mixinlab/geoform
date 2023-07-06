@@ -354,10 +354,21 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                                 (widget.registerOnlyWithMarker &&
                                     state.selectedMarker != null)
                             ? (geoformcontext) {
+                                final getformcontext = GeoformContext<U>(
+                                  currentUserPosition: LatLng(
+                                    state.userLocation?.latitude ?? 0,
+                                    state.userLocation?.longitude ?? 0,
+                                  ),
+                                  currentMapPosition:
+                                      state.mapPosition ?? LatLng(50, 50),
+                                  geostate: state,
+                                  functions: _geofunctions,
+                                  actionText: actionTextController.text,
+                                );
                                 if (widget.onRegisterPressed != null) {
                                   widget.onRegisterPressed!.call(
                                     context,
-                                    geoformcontext,
+                                    getformcontext,
                                   );
                                 } else {
                                   Navigator.push<void>(
@@ -365,7 +376,7 @@ class _GeoformViewState<T, U extends GeoformMarkerDatum>
                                     MaterialPageRoute(
                                       builder: (context) => widget.formBuilder(
                                         context,
-                                        geoformcontext,
+                                        getformcontext,
                                       ),
                                     ),
                                   ).then((value) {
