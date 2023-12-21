@@ -9,8 +9,58 @@ env:
   GENERATED_CHANGELOG_FILE: CHANGELOG.md
 
 jobs:
-  publish:
-    name: Publish on pub.dev and Github
+  generate-changelog:
+    name: Generate changelog
+    runs-on: ubuntu-20.04
+    outputs:
+      release_body: ${{ steps.release.outputs.release_body }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Generate a changelog
+        uses: orhun/git-cliff-action@v1
+        id: git-cliff
+        with:
+          config: config/cliff.toml
+          args: -vv --strip header
+        env:
+          OUTPUT: CHANGES.md
+      - name: Set the release body
+        id: release
+        shell: bash
+        run: |
+          r=$(cat ${{ steps.git-cliff.outputs.changelog }})
+          r="$(printf "$r" | tail -n +3)"
+          r="${r//'%'/'%25'}"
+          r="${r//$'\n'/'%0A'}"
+          r="${r//$'\r'/'%0D'}"
+          echo "::set-output name=release_body::$r"
+
+  publish-github:
+    name: Publish on GitHub
+    needs: generate-changelog
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set the release version
+        shell: bash
+        run: echo "RELEASE_VERSION=${GITHUB_REF:11}" >> $GITHUB_ENV
+
+      - name: Publish to Github
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          body: "${{ needs.generate-changelog.outputs.release_body }}"
+          name: "Release ${{ env.RELEASE_VERSION }}"
+
+  publish-pub-dev:
+    name: Publish on pub.dev
+    needs: generate-changelog
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
@@ -19,14 +69,29 @@ jobs:
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
-          # flutter-version: "2.8.0"
           channel: "stable"
           cache: true
 
-      - name: Setup publish token
+      - name: Set the release version
+        shell: bash
+        run: echo "RELEASE_VERSION=${GITHUB_REF:11}" >> $GITHUB_ENV
+
+      - name: Set the CHANGELOG file
+        shell: bash
+        run: |
+          cat ${{ needs.generate-changelog.outputs.release_body }} > CHANGELOG.md
+
+      # - name: Setup publish token
+      #   env:
+      #     FLUTTER_PUB_TOKEN: ${{ secrets.FLUTTER_PUB_TOKEN }}
+      #   run: flutter pub token add ${{ env.PUB_DEV_PROJECT_URL }} --env-var FLUTTER_PUB_TOKEN
+
+      - name: Setup pub.dev credentials
         env:
-          FLUTTER_PUB_TOKEN: ${{ secrets.FLUTTER_PUB_TOKEN }}
-        run: flutter pub token add ${{ env.PUB_DEV_PROJECT_URL }} --env-var FLUTTER_PUB_TOKEN
+          PUB_CREDENTIALS_FILE_B64: ${{ secrets.PUB_CREDENTIALS_FILE_B64 }}
+        run: |
+          mkdir -p ~/.pub-cache
+          echo $PUB_CREDENTIALS_FILE_B64 | base64 --decode > ~/.pub-cache/credentials.json
 
       - name: Install dependencies
         run: flutter pub get
@@ -40,20 +105,5 @@ jobs:
       # - name: Check Publish Warnings
       #   run: flutter pub publish --dry-run
 
-      - name: Generate a changelog
-        uses: orhun/git-cliff-action@v1
-        env:
-          OUTPUT: ${{ env.GENERATED_CHANGELOG_FILE }}
-        with:
-          config: cliff.toml
-          args: -vv --latest
-
       - name: Publish to Pub.dev
         run: flutter pub publish -f
-
-      - name: Publish to Github
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          body_path: ${{ env.GENERATED_CHANGELOG_FILE }}
