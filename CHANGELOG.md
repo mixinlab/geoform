@@ -51,3 +51,7 @@ Fix: initial position on manual selection
 ## 0.0.8-beta.2
 
 - Fix: use extended geoform markers class in geoform view
+
+## 0.1.0
+
+- Documentation: Added comprehensive documentation for library usage, including README and inline code comments.

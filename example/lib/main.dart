@@ -79,6 +79,20 @@ class Home extends StatelessWidget {
 class GeoPage extends StatelessWidget {
   const GeoPage({Key? key}) : super(key: key);
 
+  List<MyMarker> generateMarkers() {
+    final List<MyMarker> markers = [];
+    for (int i = 0; i < 128; i++) {
+      for (int j = 0; j < 128; j++) {
+        final double lat = -16.4090 + i / 10000.0;
+        final double lng = -71.5090 + j / 10000.0;
+        markers.add(
+          MyMarker(position: LatLng(lat, lng), code: '$i-$j'),
+        );
+      }
+    }
+    return markers;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,9 +103,9 @@ class GeoPage extends StatelessWidget {
         title: "Geoform",
         registerOnlyWithMarker: true,
         registerWithManualSelection: true,
-        initialPosition: LatLng(-16.40904025, -71.509028501),
+        initialPosition: LatLng(-16.40904029, -71.509028501),
         initialZoom: 18,
-        markers: [MyMarker(position: LatLng(-16.40904025, -71.509028501))],
+        markers: generateMarkers(),
         formBuilder: (BuildContext context, GeoformContext geoformContext) {
           final mapPosition = geoformContext.currentMapPosition;
           final userPosition = geoformContext.currentUserPosition;
@@ -181,6 +195,7 @@ class GeoPage extends StatelessWidget {
                                         -16.40904025,
                                         -71.509028501,
                                       ),
+                                      code: "code",
                                     );
                                     geocontext.functions
                                         .funcToMove(mark.position, 18);
@@ -303,8 +318,12 @@ class GeoPage extends StatelessWidget {
 }
 
 class MyMarker implements GeoformMarkerDatum {
-  MyMarker({required this.position});
+  MyMarker({
+    required this.position,
+    required this.code,
+  });
 
   @override
   final LatLng position;
+  final String code;
 }
